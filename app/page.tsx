@@ -7,7 +7,8 @@ export default function Home() {
   const [scrolled, setScrolled] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false); // New State for Mobile Menu
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileAppsOpen, setMobileAppsOpen] = useState(false); // NEW STATE FOR MOBILE APPS
 
   // --- REAL RANDOMIZED DATA ---
   const [stats, setStats] = useState({
@@ -262,10 +263,10 @@ export default function Home() {
             </Link>
           </div>
 
-          {/* MOBILE MENU BUTTON & OVERLAY */}
+          {/* MOBILE MENU BUTTON */}
           <button 
              className="md:hidden text-white p-2 z-50 relative"
-             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+             onClick={() => { setMobileMenuOpen(!mobileMenuOpen); setMobileAppsOpen(false); }}
           >
              {mobileMenuOpen ? (
                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -275,10 +276,31 @@ export default function Home() {
           </button>
 
           {/* Full Screen Mobile Menu */}
-          <div className={`fixed inset-0 bg-[#050505] z-40 flex flex-col justify-center items-center transition-all duration-300 ${mobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}>
-             <div className="flex flex-col space-y-6 text-center">
+          <div className={`fixed inset-0 bg-[#050505] z-40 flex flex-col pt-24 px-6 overflow-y-auto transition-all duration-300 ${mobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}>
+             <div className="flex flex-col space-y-6 text-center w-full max-w-md mx-auto pb-10">
                  <Link href="/markets" className="text-3xl font-bold text-white hover:text-blue-500" onClick={() => setMobileMenuOpen(false)}>Markets</Link>
-                 <Link href="/apps" className="text-3xl font-bold text-white hover:text-blue-500" onClick={() => setMobileMenuOpen(false)}>Apps</Link>
+                 
+                 {/* Apps Mobile Dropdown */}
+                 <div className="flex flex-col w-full items-center">
+                    <button 
+                        onClick={() => setMobileAppsOpen(!mobileAppsOpen)}
+                        className="text-3xl font-bold text-white hover:text-blue-500 flex items-center justify-center gap-2 w-full"
+                    >
+                        Apps
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={`w-6 h-6 transition-transform duration-300 ${mobileAppsOpen ? 'rotate-180' : ''}`}>
+                             <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                        </svg>
+                    </button>
+                    
+                    <div className={`overflow-hidden transition-all duration-300 ease-in-out flex flex-col items-center gap-4 bg-white/5 rounded-xl w-full ${mobileAppsOpen ? 'max-h-[500px] py-6 mt-4 opacity-100' : 'max-h-0 py-0 opacity-0'}`}>
+                        <a href="https://ctrader.com/" target="_blank" className="text-xl text-gray-300 hover:text-white">cTrader</a>
+                        <a href="https://www.tradingview.com/" target="_blank" className="text-xl text-gray-300 hover:text-white">TradingView</a>
+                        <a href="https://match-trader.com/" target="_blank" className="text-xl text-gray-300 hover:text-white">Match-Trader</a>
+                        <a href="https://www.metatrader5.com/en/download" target="_blank" className="text-xl text-gray-300 hover:text-white">MetaTrader 5</a>
+                        <a href="https://www.metatrader4.com/en/download" target="_blank" className="text-xl text-gray-300 hover:text-white">MetaTrader 4</a>
+                    </div>
+                 </div>
+
                  <Link href="/tools" className="text-3xl font-bold text-white hover:text-blue-500" onClick={() => setMobileMenuOpen(false)}>Tools</Link>
                  <Link href="/company/about" className="text-3xl font-bold text-white hover:text-blue-500" onClick={() => setMobileMenuOpen(false)}>Company</Link>
                  

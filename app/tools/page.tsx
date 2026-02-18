@@ -4,7 +4,8 @@ import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 
 export default function ToolsPage() {
-  
+  const [scrolled, setScrolled] = useState(false);
+
   // --- WIDGET REFS ---
   const calendarRef = useRef<HTMLDivElement>(null);
   const techAnalysisRef = useRef<HTMLDivElement>(null);
@@ -17,6 +18,13 @@ export default function ToolsPage() {
   const [closePrice, setClosePrice] = useState<string>('1.09000');
   const [direction, setDirection] = useState<'buy' | 'sell'>('buy');
   const [profit, setProfit] = useState<number | null>(null);
+
+  // --- HANDLE SCROLL ---
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // --- CALCULATOR LOGIC ---
   const calculateProfit = () => {
@@ -112,15 +120,16 @@ export default function ToolsPage() {
     <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-blue-600 selection:text-white overflow-x-hidden">
       
       {/* --- NAVBAR --- */}
-      <nav className="fixed w-full z-50 bg-[#050505]/90 backdrop-blur-xl border-b border-white/5 py-4">
+      <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? 'bg-[#050505]/95 backdrop-blur-xl border-b border-white/5 py-4' : 'bg-transparent py-6'}`}>
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
           <Link href="/" className="text-2xl font-bold tracking-tighter text-white cursor-pointer">
               TRADE<span className="text-blue-500">CORE</span>
           </Link>
-          <div className="flex items-center gap-6">
-             <Link href="/" className="text-sm font-medium text-gray-400 hover:text-white transition hidden md:block">Home</Link>
-             <Link href="/markets" className="text-sm font-medium text-gray-400 hover:text-white transition hidden md:block">Markets</Link>
-             <Link href="/login?view=signin" className="text-sm font-medium text-gray-400 hover:text-white transition">Log In</Link>
+          <div className="flex items-center gap-4">
+             <Link href="/" className="text-sm font-medium text-gray-400 hover:text-white transition flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" /></svg>
+                <span className="hidden md:inline">Back Home</span>
+             </Link>
              <Link href="/login?view=signup" className="bg-white hover:bg-gray-200 text-black px-5 py-2 rounded-full text-sm font-bold transition shadow-lg shadow-white/5">Sign Up</Link>
           </div>
         </div>
@@ -246,7 +255,12 @@ export default function ToolsPage() {
 
       {/* --- FOOTER --- */}
       <footer className="border-t border-white/5 bg-black py-16 text-center">
-         <p className="text-gray-600 text-xs">© 2026 TradeCore Technologies. All rights reserved.</p>
+         <div className="max-w-4xl mx-auto px-6">
+             <h3 className="text-2xl font-bold text-white mb-4">Ready to trade?</h3>
+             <p className="text-gray-400 mb-8">Create an account in minutes and access these markets.</p>
+             <Link href="/login?view=signup" className="px-10 py-4 bg-white text-black rounded-lg font-bold hover:bg-gray-200 transition">Start Trading</Link>
+             <p className="text-gray-600 text-xs mt-12">© 2026 TradeCore Technologies. All rights reserved.</p>
+         </div>
       </footer>
 
     </div>
