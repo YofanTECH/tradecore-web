@@ -180,9 +180,9 @@ export default function Home() {
                       <div className="relative z-10 p-8 grid grid-cols-5 gap-8">
                           
                           {/* --- LEFT SIDE: IMAGE FIX --- */}
-                          {/* Added pt-12 to push image down so it's not cropped */}
+                          {/* CHANGED TOP-12 to TOP-6 HERE */}
                           <div className="col-span-2 relative rounded-xl overflow-hidden group/card transition-all h-full min-h-[380px] bg-gradient-to-b from-[#111] to-[#000]">
-                             <div className="absolute inset-x-0 bottom-0 top-12"> {/* Top-12 pushes it down */}
+                             <div className="absolute inset-x-0 bottom-0 top-6"> 
                                  <img 
                                     src="/chart.jpg" 
                                     alt="Trading App Preview" 
@@ -377,7 +377,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* --- LIVE STATS (ADDED SPACING) --- */}
+      {/* --- LIVE STATS --- */}
       <section className="py-32 bg-[#050505] border-t border-white/5 relative z-10">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 text-center">
           <div className="group cursor-default hover:bg-white/5 p-4 md:p-6 rounded-xl transition-all">

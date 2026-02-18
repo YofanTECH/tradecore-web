@@ -6,6 +6,29 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/app/utils/supabase/client'; 
 
 // ============================================================================
+// COMPONENT 0: COOL LOADING SPINNER (For Suspense)
+// ============================================================================
+function AuthLoading() {
+  return (
+    <div className="flex flex-col items-center justify-center p-10 bg-[#0A0A0A] border border-white/10 rounded-2xl shadow-2xl">
+      <div className="relative w-16 h-16 mb-4">
+        {/* Outer Ring */}
+        <div className="absolute inset-0 border-4 border-blue-500/20 rounded-full"></div>
+        {/* Inner Spinning Ring */}
+        <div className="absolute inset-0 border-4 border-t-blue-500 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+        {/* Center Pulse */}
+        <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-2 h-2 bg-blue-500 rounded-full animate-ping"></div>
+        </div>
+      </div>
+      <p className="text-blue-500 text-[10px] font-bold tracking-[0.3em] animate-pulse uppercase">
+        Establishing Secure Connection
+      </p>
+    </div>
+  );
+}
+
+// ============================================================================
 // COMPONENT 1: CAPTCHA MODAL
 // ============================================================================
 function CaptchaModal({ isOpen, onClose, onSuccess }: { isOpen: boolean; onClose: () => void; onSuccess: () => void }) {
@@ -143,7 +166,7 @@ function AuthContent() {
   
   const [showPassword, setShowPassword] = useState(false);
   const [showPartnerCode, setShowPartnerCode] = useState(false);
-  const [isPromoLocked, setIsPromoLocked] = useState(false); // Locks input if valid ref found
+  const [isPromoLocked, setIsPromoLocked] = useState(false); 
   const [loading, setLoading] = useState(false);
   
   const [showCaptcha, setShowCaptcha] = useState(false);
@@ -158,22 +181,20 @@ function AuthContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // --- AUTO FILL & LOCK LOGIC (THE FIX) ---
+  // --- AUTO FILL & LOCK LOGIC ---
   useEffect(() => {
     const ref = searchParams.get('ref');
     const viewParam = searchParams.get('view');
     
-    // Check for 'signup' view param
     if (viewParam === 'signup') {
         setView('signup');
     }
 
-    // Check for referral code
     if (ref) {
         setPartnerCode(ref);
-        setIsPromoLocked(true); // Lock it
-        setShowPartnerCode(true); // Open the accordion
-        setView('signup'); // Force signup view
+        setIsPromoLocked(true); 
+        setShowPartnerCode(true); 
+        setView('signup'); 
     }
   }, [searchParams]);
 
@@ -405,7 +426,14 @@ function AuthContent() {
             )}
 
             <button disabled={loading} className="w-full bg-[#FFE600] hover:bg-[#E5CE00] text-black font-bold py-3.5 rounded-lg shadow-lg shadow-yellow-500/10 transition-all hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mt-6">
-              {loading ? <svg className="animate-spin h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> : (view === 'signup' ? 'Register' : view === 'forgot' ? 'Send Recovery Link' : 'Sign In')}
+              {loading ? (
+                <div className="flex items-center gap-2">
+                   <div className="h-4 w-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                   <span className="text-xs font-bold uppercase tracking-wider">Processing...</span>
+                </div>
+              ) : (
+                view === 'signup' ? 'Register' : view === 'forgot' ? 'Send Recovery Link' : 'Sign In'
+              )}
             </button>
 
             {view === 'signin' && (<div className="text-center mt-4"><button type="button" onClick={() => setView('forgot')} className="text-xs text-gray-500 hover:text-white transition">Forgot password?</button></div>)}
@@ -433,9 +461,11 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-blue-600 selection:text-white relative overflow-x-hidden flex flex-col items-center justify-center py-20">
       <div className="fixed top-0 left-0 w-[800px] h-[800px] bg-blue-500/15 rounded-full blur-[120px] pointer-events-none z-0 transform -translate-x-1/2 -translate-y-1/2 transition-transform duration-75 mix-blend-screen" style={{ left: mousePosition.x, top: mousePosition.y }}></div>
-      <Suspense fallback={<div className="text-white">Loading...</div>}>
+      
+      <Suspense fallback={<AuthLoading />}>
         <AuthContent />
       </Suspense>
+
       <div className="max-w-4xl mx-auto px-6 mt-20 text-center space-y-6 opacity-60 pb-10">
           <div className="text-[10px] text-gray-500 leading-relaxed space-y-4">
               <p>TradeCore does not offer services to residents of certain jurisdictions including the USA, Iran, North Korea, the European Union, the United Kingdom and others. The content of the website including translations should not be construed as means for solicitation. Investors make their own and independent decisions.</p>
