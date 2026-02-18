@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/app/utils/supabase/client';
 
@@ -17,73 +17,86 @@ type Account = {
 };
 
 type ReferralData = {
-    created_at: string;
+  created_at: string;
 }
 
 type ToastMessage = {
-    message: string;
-    type: 'success' | 'error';
+  message: string;
+  type: 'success' | 'error';
+};
+
+type Notification = {
+  id: string;
+  title: string;
+  message: string;
+  type: 'success' | 'info' | 'warning';
+  time: string;
 };
 
 // --- DATA CONSTANTS ---
 const PLATFORMS = [
-    { id: 'mt5', name: 'MetaTrader 5', desc: 'Multi-asset institutional platform.' },
-    { id: 'mt4', name: 'MetaTrader 4', desc: 'The legendary forex standard.' },
-    { id: 'ctrader', name: 'cTrader', desc: 'Premium ECN trading experience.' },
-    { id: 'tv', name: 'TradingView', desc: 'Trade directly from charts.' },
-    { id: 'match', name: 'Match-Trader', desc: 'Modern, all-in-one platform.' },
+  { id: 'mt5', name: 'MetaTrader 5', desc: 'Multi-asset institutional platform.' },
+  { id: 'mt4', name: 'MetaTrader 4', desc: 'The legendary forex standard.' },
+  { id: 'ctrader', name: 'cTrader', desc: 'Premium ECN trading experience.' },
+  { id: 'tv', name: 'TradingView', desc: 'Trade directly from charts.' },
+  { id: 'match', name: 'Match-Trader', desc: 'Modern, all-in-one platform.' },
 ];
 
 const BONUSES = [
-    { 
-        id: 'welcome200', 
-        title: '$200 Cash Bonus', 
-        desc: 'Get an instant $200 credit when you make a deposit of $500 or more.', 
-        progress: 0, 
-        target: 500, 
-        status: 'available',
-        color: 'text-green-500',
-        bg: 'bg-green-500/10',
-        btn: 'Claim Now'
-    },
-    { 
-        id: 'referral200', 
-        title: '200% Deposit Match', 
-        desc: 'Unlock double trading power by referring 5 active friends.', 
-        progress: 20, 
-        target: 100, 
-        status: 'active',
-        color: 'text-yellow-500',
-        bg: 'bg-yellow-500/10',
-        btn: 'Continue'
-    },
-    { 
-        id: 'vip_risk', 
-        title: '3 Risk-Free Trades', 
-        desc: 'Your first 3 trades are insured against loss. Requires VIP status.', 
-        progress: 0, 
-        target: 100, 
-        status: 'locked',
-        color: 'text-purple-500',
-        bg: 'bg-purple-500/10',
-        btn: 'Locked'
-    }
+  { 
+    id: 'welcome200', 
+    title: '$200 Cash Bonus', 
+    desc: 'Get an instant $200 credit when you make a deposit of $500 or more.', 
+    progress: 0, 
+    target: 500, 
+    status: 'available',
+    color: 'text-green-500',
+    bg: 'bg-green-500/10',
+    btn: 'Claim Now'
+  },
+  { 
+    id: 'referral200', 
+    title: '200% Deposit Match', 
+    desc: 'Unlock double trading power by referring 5 active friends.', 
+    progress: 20, 
+    target: 100, 
+    status: 'active',
+    color: 'text-yellow-500',
+    bg: 'bg-yellow-500/10',
+    btn: 'Continue'
+  },
+  { 
+    id: 'vip_risk', 
+    title: '3 Risk-Free Trades', 
+    desc: 'Your first 3 trades are insured against loss. Requires VIP status.', 
+    progress: 0, 
+    target: 100, 
+    status: 'locked',
+    color: 'text-purple-500',
+    bg: 'bg-purple-500/10',
+    btn: 'Locked'
+  }
 ];
 
 const PAYMENT_METHODS = [
-    // CRYPTO (Active)
-    { id: 'btc', name: 'Bitcoin (BTC)', type: 'crypto', icon: '₿', color: 'text-orange-500', bg: 'bg-orange-500/10', time: '1 hour', limit: '10 - 200k', address: 'bc1q4kxf53tuedzqhyw2ay5ft153cv2ngg48muz0ge' },
-    { id: 'usdt_trc20', name: 'Tether (USDT TRC20)', type: 'crypto', icon: 'T', color: 'text-green-500', bg: 'bg-green-500/10', time: '5 mins', limit: '10 - 200k', address: 'TJmjDXa7q4tNTZMij8hPXvghj1LrRkFf8V' },
-    { id: 'trx', name: 'TRON (TRX)', type: 'crypto', icon: '♦', color: 'text-red-500', bg: 'bg-red-500/10', time: '5 mins', limit: '10 - 200k', address: 'TJmjDXa7q4tNTZMij8hPXvghj1LrRkFf8V' },
-    { id: 'eth', name: 'Ethereum (ETH)', type: 'crypto', icon: 'Ξ', color: 'text-purple-500', bg: 'bg-purple-500/10', time: '15 mins', limit: '10 - 200k', address: '0x836877b56054434f5be5c97c19809fd7ad08006a' },
-    { id: 'usdt_erc20', name: 'Tether (USDT ERC20)', type: 'crypto', icon: 'T', color: 'text-green-500', bg: 'bg-green-500/10', time: '15 mins', limit: '10 - 200k', address: '0x836877b56054434f5be5c97c19809fd7ad08006a' },
-    { id: 'usdc_erc20', name: 'USD Coin (USDC ERC20)', type: 'crypto', icon: '$', color: 'text-blue-500', bg: 'bg-blue-500/10', time: '15 mins', limit: '10 - 200k', address: '0x836877b56054434f5be5c97c19809fd7ad08006a' },
-    { id: 'usdt_bep20', name: 'Tether (USDT BEP20)', type: 'crypto', icon: 'T', color: 'text-green-500', bg: 'bg-green-500/10', time: '5 mins', limit: '10 - 200k', address: '0x836877b56054434f5be5c97c19809fd7ad08006a' },
-    { id: 'usdc_bep20', name: 'USD Coin (USDC BEP20)', type: 'crypto', icon: '$', color: 'text-blue-500', bg: 'bg-blue-500/10', time: '5 mins', limit: '10 - 200k', address: '0x836877b56054434f5be5c97c19809fd7ad08006a' },
-    // FIAT (Coming Soon)
-    { id: 'card', name: 'MasterCard / Visa', type: 'fiat', icon: '💳', color: 'text-white', bg: 'bg-white/10', time: 'Instant', limit: '50 - 10k', status: 'soon' },
-    { id: 'paypal', name: 'PayPal', type: 'fiat', icon: 'P', color: 'text-blue-400', bg: 'bg-blue-500/10', time: 'Instant', limit: '50 - 5k', status: 'soon' },
-    { id: 'bank', name: 'International Bank Wire', type: 'fiat', icon: '🏦', color: 'text-gray-300', bg: 'bg-white/5', time: '3-5 Days', limit: '500 - 500k', status: 'soon' },
+  { id: 'btc', name: 'Bitcoin (BTC)', type: 'crypto', icon: '₿', color: 'text-orange-500', bg: 'bg-orange-500/10', time: 'Instant', limit: '50 - 200k', address: 'bc1qshcgsytuknsa6snremp80azdn6vjrudtsv6pg2' },
+  { id: 'usdt_trc20', name: 'Tether (USDT TRC20)', type: 'crypto', icon: 'T', color: 'text-green-500', bg: 'bg-green-500/10', time: '5 mins', limit: '50 - 200k', address: 'TJmjDXa7q4tNTZMij8hPXvghj1LrRkFf8V' },
+  { id: 'trx', name: 'TRON (TRX)', type: 'crypto', icon: '♦', color: 'text-red-500', bg: 'bg-red-500/10', time: '5 mins', limit: '50 - 200k', address: 'TJmjDXa7q4tNTZMij8hPXvghj1LrRkFf8V' },
+  { id: 'eth', name: 'Ethereum (ETH)', type: 'crypto', icon: 'Ξ', color: 'text-purple-500', bg: 'bg-purple-500/10', time: '15 mins', limit: '50 - 200k', address: '0x836877b56054434f5be5c97c19809fd7ad08006a' },
+  { id: 'usdt_erc20', name: 'Tether (USDT ERC20)', type: 'crypto', icon: 'T', color: 'text-green-500', bg: 'bg-green-500/10', time: '15 mins', limit: '50 - 200k', address: '0x836877b56054434f5be5c97c19809fd7ad08006a' },
+  { id: 'usdc_erc20', name: 'USD Coin (USDC ERC20)', type: 'crypto', icon: '$', color: 'text-blue-500', bg: 'bg-blue-500/10', time: '15 mins', limit: '50 - 200k', address: '0x836877b56054434f5be5c97c19809fd7ad08006a' },
+  { id: 'usdt_bep20', name: 'Tether (USDT BEP20)', type: 'crypto', icon: 'T', color: 'text-green-500', bg: 'bg-green-500/10', time: '5 mins', limit: '50 - 200k', address: '0x836877b56054434f5be5c97c19809fd7ad08006a' },
+  { id: 'usdc_bep20', name: 'USD Coin (USDC BEP20)', type: 'crypto', icon: '$', color: 'text-blue-500', bg: 'bg-blue-500/10', time: '5 mins', limit: '50 - 200k', address: '0x836877b56054434f5be5c97c19809fd7ad08006a' },
+  { id: 'card', name: 'MasterCard / Visa', type: 'fiat', icon: '💳', color: 'text-white', bg: 'bg-white/10', time: 'Instant', limit: '50 - 10k', status: 'soon' },
+  { id: 'paypal', name: 'PayPal', type: 'fiat', icon: 'P', color: 'text-blue-400', bg: 'bg-blue-500/10', time: 'Instant', limit: '50 - 5k', status: 'soon' },
+  { id: 'bank', name: 'International Bank Wire', type: 'fiat', icon: '🏦', color: 'text-gray-300', bg: 'bg-white/5', time: '3-5 Days', limit: '500 - 500k', status: 'soon' },
+];
+
+const FAQS = [
+    "Learn more about crypto",
+    "How do I buy crypto from exchanges?",
+    "How do I verify my crypto address?",
+    "How do I deposit with Bitcoin?"
 ];
 
 export default function Dashboard() {
@@ -102,6 +115,23 @@ export default function Dashboard() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
+
+  // --- KYC STATES ---
+  // Load initial status from localStorage if available
+  const [kycStatus, setKycStatus] = useState<'unverified' | 'pending' | 'verified'>('unverified');
+  const [kycStep, setKycStep] = useState(1);
+  const [kycProcessing, setKycProcessing] = useState(false);
+  const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const frontFileRef = useRef<HTMLInputElement>(null);
+  const backFileRef = useRef<HTMLInputElement>(null);
+  const [frontFile, setFrontFile] = useState<File | null>(null);
+  const [backFile, setBackFile] = useState<File | null>(null);
+
+  // --- NOTIFICATIONS ---
+  const [notifications, setNotifications] = useState<Notification[]>([
+      { id: '1', title: 'Welcome Aboard 🚀', message: 'Your account is active. Complete your first deposit to start trading.', type: 'info', time: '2 hours ago' }
+  ]);
 
   // --- PERFORMANCE PAGE STATE ---
   const [perfTimeframe, setPerfTimeframe] = useState('All');
@@ -186,7 +216,14 @@ export default function Dashboard() {
 
   }, [rawReferrals, graphFilter]);
 
+  // --- DATA LOADING & PERSISTENCE ---
   useEffect(() => {
+    // Check Local Storage for KYC
+    const savedKyc = localStorage.getItem('kycStatus');
+    if (savedKyc === 'verified' || savedKyc === 'pending') {
+        setKycStatus(savedKyc as any);
+    }
+
     setOrigin(window.location.origin);
     async function getData() {
       const { data: { user } } = await supabase.auth.getUser();
@@ -209,6 +246,12 @@ export default function Dashboard() {
           
           if (!error && referrals) {
               setRawReferrals(referrals as unknown as ReferralData[]);
+              if (referrals.length > 0) {
+                  setNotifications(prev => [
+                      { id: 'ref1', title: 'New Referral!', message: 'Someone just signed up using your link.', type: 'success', time: 'Just now' },
+                      ...prev
+                  ]);
+              }
           }
       }
       setLoading(false);
@@ -251,6 +294,7 @@ export default function Dashboard() {
 
   const handleDepositRedirect = () => {
       const amount = parseFloat(depositAmount);
+      // Min Deposit Check: $50
       if (isNaN(amount) || amount < 50 || amount > 500000) {
           triggerToast("Minimum deposit is $50.", "error");
           return;
@@ -274,7 +318,7 @@ export default function Dashboard() {
 
   const handleBonusClaim = (id: string) => {
       if(id === 'welcome200') {
-          setActivePage('deposit'); // Redirect to deposit
+          setActivePage('deposit'); 
           triggerToast("Deposit $500+ to unlock this bonus.", "success");
       } else if (id === 'referral200') {
           setActivePage('referrals');
@@ -289,18 +333,68 @@ export default function Dashboard() {
       setTimeout(() => setCopySuccess(false), 2000); 
   };
 
+  // --- KYC FUNCTIONS ---
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'front' | 'back') => {
+      if (e.target.files && e.target.files[0]) {
+          if (type === 'front') setFrontFile(e.target.files[0]);
+          else setBackFile(e.target.files[0]);
+      }
+  };
+
+  const startCamera = async () => {
+      try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          setVideoStream(stream);
+          if (videoRef.current) {
+              videoRef.current.srcObject = stream;
+          }
+      } catch (err) {
+          triggerToast("Camera access denied or unavailable.", "error");
+      }
+  };
+
+  const stopCamera = () => {
+      if (videoStream) {
+          videoStream.getTracks().forEach(track => track.stop());
+          setVideoStream(null);
+      }
+  };
+
+  // Cleanup camera on unmount or step change
+  useEffect(() => {
+      return () => stopCamera();
+  }, []);
+
+  const handleKYCSubmit = () => {
+      stopCamera();
+      setKycProcessing(true);
+      
+      // Simulate Processing
+      setTimeout(() => {
+          setKycProcessing(false);
+          setKycStatus('pending'); 
+          localStorage.setItem('kycStatus', 'pending'); // SAVE TO LOCAL STORAGE
+          setKycStep(4); 
+          
+          triggerToast("Documents submitted successfully!", "success");
+          
+          // Simulate verification complete
+          setTimeout(() => {
+              setKycStatus('verified'); 
+              localStorage.setItem('kycStatus', 'verified'); // UPDATE PERSISTENCE
+              triggerToast("Account Verified!", "success");
+          }, 4000);
+      }, 3000);
+  };
+
   // --- NEW LOADING SCREEN ---
   if (loading) {
     return (
       <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center">
         <div className="relative w-20 h-20 mb-6">
-           {/* Outer Glow */}
            <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full animate-pulse"></div>
-           {/* Spinning Ring */}
            <div className="absolute inset-0 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
-           {/* Inner Static Ring */}
            <div className="absolute inset-4 border-2 border-white/10 rounded-full"></div>
-           {/* Center Dot */}
            <div className="absolute inset-0 flex items-center justify-center">
                <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
            </div>
@@ -325,6 +419,9 @@ export default function Dashboard() {
           </div>
       )}
 
+      {/* DRAGGABLE TELEGRAM SUPPORT BUTTON */}
+      <DraggableSupportButton />
+
       {/* OVERLAY FOR MENUS */}
       {(isNotifOpen || isSidebarOpen) && (
         <div 
@@ -343,23 +440,21 @@ export default function Dashboard() {
                   </button>
               </div>
               <div className="flex-1 overflow-y-auto space-y-4">
-                  {referralCount > 0 && (
-                      <div className="bg-green-500/10 p-4 rounded-xl border border-green-500/20 relative overflow-hidden group animate-in slide-in-from-right">
-                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-green-500"></div>
-                          <p className="text-sm font-bold text-white">New Referral!</p>
-                          <p className="text-xs text-gray-400 mt-1 leading-relaxed">Someone just signed up using your link.</p>
+                  {notifications.map((notif) => (
+                      <div key={notif.id} className={`p-4 rounded-xl border relative overflow-hidden group animate-in slide-in-from-right ${notif.type === 'success' ? 'bg-green-500/10 border-green-500/20' : notif.type === 'info' ? 'bg-blue-500/10 border-blue-500/20' : 'bg-yellow-500/10 border-yellow-500/20'}`}>
+                          <div className={`absolute left-0 top-0 bottom-0 w-1 ${notif.type === 'success' ? 'bg-green-500' : notif.type === 'info' ? 'bg-blue-500' : 'bg-yellow-500'}`}></div>
+                          <div className="flex justify-between items-start">
+                              <p className="text-sm font-bold text-white">{notif.title}</p>
+                              <span className="text-[10px] text-gray-500 font-mono">{notif.time}</span>
+                          </div>
+                          <p className="text-xs text-gray-400 mt-1 leading-relaxed">{notif.message}</p>
                       </div>
-                  )}
-                  <div className="bg-gradient-to-r from-blue-900/20 to-transparent p-4 rounded-xl border border-blue-500/20 relative overflow-hidden group">
-                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500"></div>
-                      <p className="text-sm font-bold text-white">Welcome Aboard 🚀</p>
-                      <p className="text-xs text-gray-400 mt-1 leading-relaxed">Your account is active. Complete your first deposit to start trading live markets.</p>
-                  </div>
+                  ))}
               </div>
           </div>
       </div>
 
-      {/* 2. SIDEBAR MENU (LEFT - COLLAPSIBLE DRAWER) */}
+      {/* 2. SIDEBAR MENU */}
       <div className={`fixed top-0 left-0 h-full w-[280px] bg-[#0A0A0A] border-r border-white/5 shadow-2xl z-[70] transform transition-transform duration-300 ease-out flex flex-col ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="h-16 flex items-center justify-between px-6 border-b border-white/5">
            <span className="text-xl font-bold tracking-tighter cursor-pointer select-none" onClick={() => router.push('/')}>TRADE<span className="text-blue-500">CORE</span></span>
@@ -420,12 +515,13 @@ export default function Dashboard() {
                <div className={`space-y-1 overflow-hidden transition-all duration-300 ease-in-out ${openSections.settings ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
                    <div className="px-3">
                        <SidebarItem icon="user" label="Profile" active={activePage === 'profile'} onClick={() => handleNavClick('profile')} />
+                       <SidebarItem icon="shield" label="KYC Verification" active={activePage === 'kyc'} onClick={() => handleNavClick('kyc')} />
                    </div>
                </div>
            </div>
         </div>
 
-        {/* SIDEBAR FOOTER (TIGHT GAP FIXED) */}
+        {/* SIDEBAR FOOTER */}
         <div className="p-4 border-t border-white/5 bg-[#080808]">
             <div className="flex items-center gap-2">
                 <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold shadow-md flex-shrink-0">
@@ -433,7 +529,9 @@ export default function Dashboard() {
                 </div>
                 <div className="flex-1 min-w-0">
                     <p className="text-sm font-bold text-white truncate leading-tight">{user?.email?.split('@')[0]}</p>
-                    <p className="text-[10px] text-green-500 font-medium leading-tight mt-0.5">Verified</p>
+                    <p className={`text-[10px] font-bold leading-tight mt-0.5 ${kycStatus === 'verified' ? 'text-green-500' : kycStatus === 'pending' ? 'text-yellow-500' : 'text-red-500'}`}>
+                        {kycStatus === 'verified' ? 'Verified' : kycStatus === 'pending' ? 'Pending' : 'Unverified'}
+                    </p>
                 </div>
                 <button onClick={handleLogout} className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-white/5 transition flex-shrink-0" title="Log Out">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" /></svg>
@@ -520,7 +618,7 @@ export default function Dashboard() {
                 </button>
                 {/* DYNAMIC TITLE */}
                 <h1 className="text-lg font-bold capitalize hidden md:block">
-                    {activePage === 'history' ? 'Trade History' : activePage === 'trans' ? 'Transactions' : activePage.replace('-', ' ')}
+                    {activePage === 'history' ? 'Trade History' : activePage === 'trans' ? 'Transactions' : activePage === 'kyc' ? 'Verification' : activePage.replace('-', ' ')}
                 </h1>
             </div>
 
@@ -539,8 +637,6 @@ export default function Dashboard() {
         {/* CONTENT */}
         <div className="flex-1 overflow-y-auto p-6 md:p-10 relative">
             
-            {/* ... [PROFILE, REFERRALS, ACCOUNTS views same as before] ... */}
-            
             {/* --- 1. PROFILE VIEW --- */}
             {activePage === 'profile' && (
                <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in zoom-in-95 duration-300">
@@ -551,9 +647,13 @@ export default function Dashboard() {
                         <div>
                             <h2 className="text-2xl font-bold text-white">{user?.email?.split('@')[0]}</h2>
                             <p className="text-gray-400 text-sm">{user?.email}</p>
-                            <div className="mt-2 flex gap-2">
-                                <span className="bg-green-500/10 text-green-500 text-xs px-2 py-1 rounded border border-green-500/20">Verified Account</span>
-                                <span className="bg-blue-500/10 text-blue-500 text-xs px-2 py-1 rounded border border-blue-500/20">Pro Trader</span>
+                            <div className="mt-3 flex gap-2">
+                                <span className={`text-xs px-3 py-1 rounded border ${kycStatus === 'verified' ? 'bg-green-500/10 text-green-500 border-green-500/20' : kycStatus === 'pending' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20'}`}>
+                                    {kycStatus === 'verified' ? 'Verified Account' : kycStatus === 'pending' ? 'Verification Pending' : 'Not Verified'}
+                                </span>
+                                {kycStatus === 'unverified' && (
+                                    <button onClick={() => handleNavClick('kyc')} className="text-xs px-3 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white font-bold transition">Verify Now &rarr;</button>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -581,10 +681,153 @@ export default function Dashboard() {
                             </div>
                         </div>
                     </div>
+               </div>
+            )}
+
+            {/* --- KYC PAGE (NEW) --- */}
+            {activePage === 'kyc' && (
+                <div className="max-w-3xl mx-auto animate-in fade-in zoom-in-95 duration-300">
+                    <div className="mb-8">
+                        <h2 className="text-2xl font-bold text-white mb-2">Identity Verification</h2>
+                        <p className="text-gray-400 text-sm">Complete KYC to unlock full trading limits and withdrawals.</p>
+                    </div>
+
+                    {/* Steps Indicator */}
+                    <div className="flex items-center justify-between mb-10 px-4">
+                        {[1, 2, 3].map((step) => (
+                            <div key={step} className="flex flex-col items-center gap-2 relative z-10">
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all duration-500 ${kycStep >= step ? 'bg-blue-600 border-blue-600 text-white' : 'bg-[#111] border-white/10 text-gray-500'}`}>
+                                    {kycStep > step ? '✓' : step}
+                                </div>
+                                <span className={`text-xs font-bold ${kycStep >= step ? 'text-blue-500' : 'text-gray-600'}`}>{step === 1 ? 'Personal Info' : step === 2 ? 'ID Upload' : 'Face Check'}</span>
+                            </div>
+                        ))}
+                        {/* Connecting Line */}
+                        <div className="absolute top-[165px] left-0 right-0 h-0.5 bg-white/5 -z-0 max-w-2xl mx-auto hidden md:block"></div>
+                        <div className="absolute top-[165px] left-0 h-0.5 bg-blue-600/50 -z-0 max-w-2xl mx-auto transition-all duration-500 hidden md:block" style={{ width: `${((kycStep - 1) / 2) * 100}%` }}></div>
+                    </div>
+
+                    <div className="bg-[#111] border border-white/10 rounded-2xl p-8 shadow-2xl relative overflow-hidden min-h-[400px]">
+                        {kycProcessing && (
+                            <div className="absolute inset-0 bg-black/90 backdrop-blur-md z-50 flex flex-col items-center justify-center animate-in fade-in duration-300">
+                                 <div className="relative w-24 h-24 mb-6">
+                                    <div className="absolute inset-0 border-4 border-blue-500/30 rounded-full"></div>
+                                    <div className="absolute inset-0 border-4 border-t-blue-500 rounded-full animate-spin"></div>
+                                    <div className="absolute inset-0 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-10 h-10 text-blue-500 animate-pulse"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg></div>
+                                 </div>
+                                 <h3 className="text-xl text-white font-bold mb-2">Processing Documents</h3>
+                                 <p className="text-gray-500 text-sm animate-pulse">Verifying your identity...</p>
+                            </div>
+                        )}
+
+                        {/* Step 1: Personal Info */}
+                        {kycStep === 1 && (
+                            <div className="space-y-6">
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div><label className="block text-xs text-gray-500 font-bold uppercase mb-2">First Name</label><input type="text" className="w-full bg-[#050505] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-blue-500 outline-none" placeholder="John" /></div>
+                                    <div><label className="block text-xs text-gray-500 font-bold uppercase mb-2">Last Name</label><input type="text" className="w-full bg-[#050505] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-blue-500 outline-none" placeholder="Doe" /></div>
+                                </div>
+                                <div><label className="block text-xs text-gray-500 font-bold uppercase mb-2">Date of Birth</label><input type="date" className="w-full bg-[#050505] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-blue-500 outline-none" /></div>
+                                <div><label className="block text-xs text-gray-500 font-bold uppercase mb-2">Full Address</label><input type="text" className="w-full bg-[#050505] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-blue-500 outline-none" placeholder="123 Trading St, New York, NY" /></div>
+                                <button onClick={() => setKycStep(2)} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl mt-4 transition">Continue &rarr;</button>
+                            </div>
+                        )}
+
+                        {/* Step 2: Documents (REAL FILE INPUTS) */}
+                        {kycStep === 2 && (
+                            <div className="space-y-6">
+                                <p className="text-sm text-gray-400 mb-4">Please upload a clear photo of your Government ID (Passport, Driver's License, or ID Card).</p>
+                                {/* Hidden Inputs */}
+                                <input type="file" ref={frontFileRef} onChange={(e) => handleFileSelect(e, 'front')} className="hidden" accept="image/*" />
+                                <input type="file" ref={backFileRef} onChange={(e) => handleFileSelect(e, 'back')} className="hidden" accept="image/*" />
+
+                                <div className="grid grid-cols-2 gap-6">
+                                    {/* Front ID */}
+                                    <div 
+                                        onClick={() => frontFileRef.current?.click()}
+                                        className={`border-2 border-dashed ${frontFile ? 'border-green-500/50 bg-green-500/5' : 'border-white/10 hover:border-blue-500/50 hover:bg-white/5'} rounded-xl p-6 flex flex-col items-center justify-center text-center transition cursor-pointer h-40 group`}
+                                    >
+                                        {frontFile ? (
+                                             <>
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-green-500 mb-2"><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                                                <span className="text-xs font-bold text-green-500 break-all px-2">{frontFile.name}</span>
+                                             </>
+                                        ) : (
+                                            <>
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-gray-500 group-hover:text-blue-500 mb-2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" /></svg>
+                                                <span className="text-xs font-bold text-gray-400 group-hover:text-white">Upload Front ID</span>
+                                            </>
+                                        )}
+                                    </div>
+
+                                    {/* Back ID */}
+                                    <div 
+                                        onClick={() => backFileRef.current?.click()}
+                                        className={`border-2 border-dashed ${backFile ? 'border-green-500/50 bg-green-500/5' : 'border-white/10 hover:border-blue-500/50 hover:bg-white/5'} rounded-xl p-6 flex flex-col items-center justify-center text-center transition cursor-pointer h-40 group`}
+                                    >
+                                        {backFile ? (
+                                             <>
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-green-500 mb-2"><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                                                <span className="text-xs font-bold text-green-500 break-all px-2">{backFile.name}</span>
+                                             </>
+                                        ) : (
+                                            <>
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-gray-500 group-hover:text-blue-500 mb-2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" /></svg>
+                                                <span className="text-xs font-bold text-gray-400 group-hover:text-white">Upload Back ID</span>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                                <button onClick={() => setKycStep(3)} disabled={!frontFile || !backFile} className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl mt-4 transition">Next Step &rarr;</button>
+                            </div>
+                        )}
+
+                        {/* Step 3: Face Check (REAL CAMERA) */}
+                        {kycStep === 3 && (
+                            <div className="text-center space-y-6">
+                                <div className="w-full max-w-sm mx-auto aspect-square bg-black rounded-full border-4 border-white/10 relative overflow-hidden flex items-center justify-center group">
+                                    {videoStream ? (
+                                        <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover transform scale-x-[-1]" />
+                                    ) : (
+                                        <div className="flex flex-col items-center">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-20 h-20 text-gray-600 mb-2"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
+                                            <p className="text-gray-500 text-xs">Camera is off</p>
+                                        </div>
+                                    )}
+                                    <div className="absolute inset-0 border-[20px] border-black/30 rounded-full pointer-events-none"></div>
+                                    {videoStream && <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-500/10 to-transparent animate-scan pointer-events-none"></div>}
+                                </div>
+                                <p className="text-gray-400 text-sm">Please position your face within the circle for a liveness check.</p>
+                                
+                                {!videoStream ? (
+                                    <button onClick={startCamera} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl mt-4 transition flex items-center justify-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" /></svg>
+                                        Enable Camera
+                                    </button>
+                                ) : (
+                                    <button onClick={handleKYCSubmit} className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3.5 rounded-xl mt-4 transition shadow-lg shadow-green-500/20">
+                                        Capture & Verify
+                                    </button>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Step 4: Success */}
+                        {kycStep === 4 && (
+                            <div className="text-center py-10 animate-in zoom-in-95 duration-500">
+                                <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6 text-green-500 shadow-[0_0_30px_rgba(34,197,94,0.3)]">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-10 h-10"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                                </div>
+                                <h3 className="text-2xl font-bold text-white mb-2">Documents Submitted!</h3>
+                                <p className="text-gray-400">Your account is now being verified. You will be notified once approved.</p>
+                                <button onClick={() => setActivePage('accounts')} className="mt-8 text-blue-500 hover:text-white font-bold text-sm">Back to Dashboard</button>
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
 
-            {/* --- 2. REFERRALS VIEW --- */}
+            {/* --- 2. REFERRALS VIEW (Existing) --- */}
             {activePage === 'referrals' && (
                 <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in zoom-in-95 duration-300">
                     {/* ... (referrals content same as before) ... */}
@@ -633,7 +876,7 @@ export default function Dashboard() {
                 </div>
             )}
             
-            {/* ... [BONUSES, DEPOSIT, WITHDRAW, ACCOUNTS same as before] ... */}
+            {/* ... [BONUSES] ... */}
             {activePage === 'bonuses' && (
                 <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in zoom-in-95 duration-300">
                     <div>
@@ -675,63 +918,125 @@ export default function Dashboard() {
 
             {activePage === 'deposit' && (
                 <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in zoom-in-95 duration-300">
-                    <div>
-                        <h2 className="text-2xl font-bold text-white mb-2">{selectedDepositMethod ? `Deposit ${selectedDepositMethod.name}` : 'Deposit Funds'}</h2>
-                        <p className="text-gray-400 text-sm">{selectedDepositMethod ? 'Scan QR Code or copy the address below.' : 'Select a secure payment method to fund your account.'}</p>
-                    </div>
-
                     {!selectedDepositMethod ? (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                           {PAYMENT_METHODS.map((method) => (
-                               <div 
-                                    key={method.id} 
-                                    onClick={() => method.status !== 'soon' && setSelectedDepositMethod(method)}
-                                    className={`bg-white dark:bg-[#151515] border border-gray-200 dark:border-white/5 p-6 rounded-2xl transition group flex items-start gap-4 ${method.status === 'soon' ? 'opacity-50 cursor-not-allowed' : 'hover:border-blue-500/50 hover:bg-[#1A1A1A] cursor-pointer'}`}
-                               >
-                                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl font-bold ${method.bg} ${method.color} flex-shrink-0`}>{method.icon}</div>
-                                   <div className="flex-1">
-                                        <div className="flex justify-between items-center mb-1">
-                                             <h4 className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-blue-400 transition">{method.name}</h4>
-                                             {method.status === 'soon' && <span className="text-[9px] bg-white/10 px-2 py-0.5 rounded text-gray-400">SOON</span>}
-                                        </div>
-                                        <div className="flex gap-3 text-[10px] text-gray-500">
-                                             <span>Fee: <span className="text-white">0%</span></span>
-                                             <span>Time: <span className="text-white">{method.time}</span></span>
-                                        </div>
+                        <>
+                            <div>
+                                <h2 className="text-2xl font-bold text-white mb-2">Deposit Funds</h2>
+                                <p className="text-gray-400 text-sm">Select a secure payment method to fund your account.</p>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                               {PAYMENT_METHODS.map((method) => (
+                                   <div 
+                                       key={method.id} 
+                                       onClick={() => method.status !== 'soon' && setSelectedDepositMethod(method)}
+                                       className={`bg-white dark:bg-[#151515] border border-gray-200 dark:border-white/5 p-6 rounded-2xl transition group flex items-start gap-4 ${method.status === 'soon' ? 'opacity-50 cursor-not-allowed' : 'hover:border-blue-500/50 hover:bg-[#1A1A1A] cursor-pointer'}`}
+                                   >
+                                       <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl font-bold ${method.bg} ${method.color} flex-shrink-0`}>{method.icon}</div>
+                                       <div className="flex-1">
+                                            <div className="flex justify-between items-center mb-1">
+                                                 <h4 className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-blue-400 transition">{method.name}</h4>
+                                                 {method.status === 'soon' && <span className="text-[9px] bg-white/10 px-2 py-0.5 rounded text-gray-400">SOON</span>}
+                                            </div>
+                                            <div className="flex gap-3 text-[10px] text-gray-500">
+                                                 <span>Fee: <span className="text-white">0%</span></span>
+                                                 <span>Time: <span className="text-white">{method.time}</span></span>
+                                            </div>
+                                       </div>
                                    </div>
-                               </div>
-                           ))}
-                        </div>
+                               ))}
+                            </div>
+                        </>
                     ) : (
-                        // DETAIL VIEW (UPDATED with QR and Size)
-                        <div className="bg-[#111] border border-white/10 rounded-2xl p-8 max-w-2xl mx-auto">
-                            <button onClick={() => setSelectedDepositMethod(null)} className="text-sm text-gray-500 hover:text-white flex items-center gap-2 mb-6"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" /></svg> Back to Methods</button>
-                            
-                            <div className="flex flex-col items-center text-center">
-                                {/* DYNAMIC QR CODE GENERATOR */}
-                                <div className="w-48 h-48 bg-white p-2 rounded-xl mb-6">
-                                    <img 
-                                        src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${selectedDepositMethod.address}`} 
-                                        alt="Wallet QR Code" 
-                                        className="w-full h-full object-contain"
-                                    />
-                                </div>
-                                <p className="text-gray-400 text-sm mb-2">Send only <span className="text-white font-bold">{selectedDepositMethod.name}</span> to this address.</p>
-                                
-                                <div className="w-full bg-[#050505] border border-white/20 rounded-xl px-4 py-4 flex items-center justify-between gap-4 mt-2">
-                                    {/* BIGGER FONT SIZE */}
-                                    <span className="text-xs md:text-sm font-mono text-white break-all text-center">{selectedDepositMethod.address}</span>
-                                    <button onClick={() => copyToClipboard(selectedDepositMethod.address)} className="text-blue-500 hover:text-white flex-shrink-0 ml-2"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" /></svg></button>
+                        // DETAIL VIEW
+                        <div className="max-w-6xl mx-auto">
+                            {/* TOP BAR */}
+                            <div className="flex items-center gap-4 mb-8">
+                                <button onClick={() => setSelectedDepositMethod(null)} className="text-blue-500 hover:text-white flex items-center gap-1 text-sm font-bold transition">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-3 h-3"><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" /></svg> 
+                                    Back
+                                </button>
+                                <h2 className="text-2xl font-bold text-white">Deposit</h2>
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                {/* LEFT: MAIN DEPOSIT AREA */}
+                                <div className="lg:col-span-2 space-y-8">
+                                    {/* Payment Method Display */}
+                                    <div>
+                                        <p className="text-xs text-gray-500 font-bold uppercase mb-2">Payment method</p>
+                                        <div className="bg-white px-4 py-3 rounded-md border border-gray-200 flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${selectedDepositMethod.bg} ${selectedDepositMethod.color}`}>{selectedDepositMethod.icon}</div>
+                                                <span className="text-gray-900 font-bold text-sm">{selectedDepositMethod.name}</span>
+                                            </div>
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 text-gray-400"><path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <p className="text-gray-800 dark:text-gray-300 text-sm mb-4">
+                                            To deposit funds, make a bitcoin transfer to the BTC-wallet shown below. Copy wallet address or scan QR code with your camera.
+                                        </p>
+                                        
+                                        <p className="text-xs text-gray-500 mb-1">Your unique Bitcoin wallet address</p>
+                                        <p className="text-sm font-bold text-gray-900 dark:text-white break-all mb-4">{selectedDepositMethod.address}</p>
+                                        
+                                        <div className="flex flex-wrap gap-3 mb-8">
+                                            <button 
+                                                onClick={() => copyToClipboard(selectedDepositMethod.address)}
+                                                className="bg-[#FFE600] hover:bg-[#E5CE00] text-black font-bold px-6 py-3 rounded-md text-sm flex items-center gap-2 transition"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" /></svg>
+                                                Copy address
+                                            </button>
+                                            <button 
+                                                onClick={() => setActivePage('accounts')}
+                                                className="bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-900 dark:text-white font-bold px-6 py-3 rounded-md text-sm transition"
+                                            >
+                                                Go to My Accounts
+                                            </button>
+                                        </div>
+
+                                        {/* QR CODE */}
+                                        <div className="w-48 h-48 bg-white p-2 rounded-lg border border-gray-200">
+                                             <img 
+                                                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${selectedDepositMethod.address}`} 
+                                                alt="Wallet QR Code" 
+                                                className="w-full h-full object-contain"
+                                            />
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="pt-8 mt-8 border-t border-gray-200 dark:border-white/5">
+                                        <p className="text-xs text-gray-400">All crypto wallet services are provided by Thecorio Ltd, a company incorporated in Seychelles, with registration number 8437417-1.</p>
+                                    </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4 w-full mt-6">
-                                    <div className="bg-white/5 rounded-lg p-3 text-left">
-                                        <p className="text-[10px] text-gray-500 uppercase font-bold">Network</p>
-                                        <p className="text-sm text-white">{selectedDepositMethod.name.split('(')[1]?.replace(')', '') || 'Mainnet'}</p>
+                                {/* RIGHT: SIDEBAR INFO */}
+                                <div className="lg:col-span-1 space-y-8">
+                                    <div>
+                                        <h3 className="font-bold text-white text-lg mb-4">Terms</h3>
+                                        <div className="space-y-3">
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-500 text-sm">Average payment time</span>
+                                                <span className="text-white text-sm font-medium">{selectedDepositMethod.time}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-500 text-sm">Fee</span>
+                                                <span className="text-white text-sm font-medium font-mono">0%</span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="bg-white/5 rounded-lg p-3 text-left">
-                                        <p className="text-[10px] text-gray-500 uppercase font-bold">Minimum</p>
-                                        <p className="text-sm text-white">$10.00</p>
+
+                                    <div>
+                                        <h3 className="font-bold text-white text-lg mb-4">FAQ</h3>
+                                        <ul className="space-y-2">
+                                            {FAQS.map((q, i) => (
+                                                <li key={i}>
+                                                    <a href="#" className="text-gray-400 hover:text-blue-500 text-sm transition block">{q}</a>
+                                                </li>
+                                            ))}
+                                        </ul>
                                     </div>
                                 </div>
                             </div>
@@ -756,10 +1061,10 @@ export default function Dashboard() {
                                 >
                                     <div className="flex items-center gap-3">
                                          {selectedWithdrawMethod ? (
-                                            <>
-                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${selectedWithdrawMethod.bg} ${selectedWithdrawMethod.color}`}>{selectedWithdrawMethod.icon}</div>
-                                                <span className="font-bold text-sm">{selectedWithdrawMethod.name}</span>
-                                           </>
+                                              <>
+                                                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${selectedWithdrawMethod.bg} ${selectedWithdrawMethod.color}`}>{selectedWithdrawMethod.icon}</div>
+                                                  <span className="font-bold text-sm">{selectedWithdrawMethod.name}</span>
+                                             </>
                                          ) : <span className="text-gray-500 text-sm">Select Method</span>}
                                     </div>
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${isWithdrawDropdownOpen ? 'rotate-180' : ''}`}><path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
@@ -842,11 +1147,14 @@ export default function Dashboard() {
                         <button onClick={() => setShowDepositModal(true)} className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-lg shadow-lg shadow-blue-500/20 transition flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg> Open New Account</button>
                     </div>
                     {accounts.length === 0 ? (
-                        <div className="bg-[#0E0E0E] border border-white/5 rounded-2xl p-12 text-center border-dashed">
-                            <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-500"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8"><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" /></svg></div>
-                            <h3 className="text-white font-bold text-lg">No Active Accounts</h3>
-                            <p className="text-gray-500 text-sm mt-2 max-w-xs mx-auto">Open a real account by making a minimum deposit of $50 to start trading.</p>
-                            <button onClick={() => setShowDepositModal(true)} className="mt-6 text-blue-500 hover:text-blue-400 font-bold text-sm">Deposit to Start &rarr;</button>
+                        // UPDATED "NO ACCOUNTS" STATE TO MATCH SCREENSHOT
+                        <div className="bg-black/40 border border-white/5 rounded-2xl p-12 h-[350px] flex flex-col items-center justify-center text-center">
+                            <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-6">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-gray-500"><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" /></svg>
+                            </div>
+                            <h3 className="text-white font-bold text-xl mb-2">No Active Accounts</h3>
+                            <p className="text-blue-200/50 text-sm max-w-sm mb-6 leading-relaxed">Open a real account by making a minimum deposit of $50 to start trading.</p>
+                            <button onClick={() => setActivePage('deposit')} className="text-blue-500 hover:text-blue-400 font-bold text-sm flex items-center gap-1 transition">Deposit to Start <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg></button>
                         </div>
                     ) : (
                         <div className="space-y-6">
@@ -885,7 +1193,7 @@ export default function Dashboard() {
                 </div>
             )}
             
-            {/* --- 9. TRANSACTIONS VIEW (NEW PAGE) --- */}
+            {/* --- 9. TRANSACTIONS VIEW --- */}
             {activePage === 'trans' && (
                 <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in zoom-in-95 duration-300">
                     <div className="flex items-center gap-4 border-b border-white/10 pb-4">
@@ -905,7 +1213,7 @@ export default function Dashboard() {
                 </div>
             )}
             
-             {/* --- 8. PERFORMANCE VIEW (UPDATED) --- */}
+             {/* --- 8. PERFORMANCE VIEW --- */}
             {activePage === 'perf' && (
                <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in zoom-in-95 duration-300">
                     <div className="flex flex-col md:flex-row justify-between items-center gap-4">
@@ -963,7 +1271,8 @@ export default function Dashboard() {
   );
 }
 
-// --- HELPER ---
+// --- HELPER COMPONENTS ---
+
 function SidebarItem({ icon, label, active, onClick, isExternal }: { icon: string, label: string, active: boolean, onClick: () => void, isExternal?: boolean }) {
     return (
         <button onClick={onClick} className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-bold transition-all duration-200 mb-1 group ${active ? 'bg-blue-50 dark:bg-white/10 text-blue-600 dark:text-white' : 'text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5'}`}>
@@ -986,3 +1295,72 @@ function SidebarItem({ icon, label, active, onClick, isExternal }: { icon: strin
         </button>
     );
 }
+
+const DraggableSupportButton = () => {
+    const [position, setPosition] = useState({ x: 30, y: 30 }); // Bottom-Right offset
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+    const [hasMoved, setHasMoved] = useState(false); // Track if it was a click or a drag
+
+    const handleMouseDown = (e: React.MouseEvent) => {
+        setIsDragging(true);
+        setHasMoved(false);
+        setDragStart({ x: e.clientX, y: e.clientY });
+    };
+
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            if (!isDragging) return;
+            const dx = dragStart.x - e.clientX;
+            const dy = dragStart.y - e.clientY;
+
+            // If moved more than 5px, consider it a drag
+            if (Math.abs(dx) > 5 || Math.abs(dy) > 5) setHasMoved(true);
+
+            setPosition((prev) => ({
+                x: prev.x + dx,
+                y: prev.y + dy,
+            }));
+            setDragStart({ x: e.clientX, y: e.clientY });
+        };
+
+        const handleMouseUp = () => {
+            setIsDragging(false);
+        };
+
+        if (isDragging) {
+            window.addEventListener('mousemove', handleMouseMove);
+            window.addEventListener('mouseup', handleMouseUp);
+        }
+
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [isDragging, dragStart]);
+
+    const handleClick = () => {
+        if (!hasMoved) {
+            window.open('https://t.me/SharkOperator_Group', '_blank');
+        }
+    };
+
+    return (
+        <div
+            onMouseDown={handleMouseDown}
+            onClick={handleClick}
+            style={{ 
+                right: `${position.x}px`, 
+                bottom: `${position.y}px`,
+                cursor: isDragging ? 'grabbing' : 'pointer'
+            }}
+            className="fixed z-[100] w-14 h-14 bg-[#FFE600] rounded-full shadow-[0_4px_20px_rgba(255,230,0,0.4)] flex items-center justify-center hover:scale-110 transition-transform active:scale-95 group"
+        >
+             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-7 h-7 text-black"><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 0 1-.825-.242m9.345-8.334a2.126 2.126 0 0 0-.476-.095 48.64 48.64 0 0 0-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0 0 11.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155" /></svg>
+             <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+            </span>
+        </div>
+    );
+};
