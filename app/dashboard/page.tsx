@@ -4,15 +4,6 @@ import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/app/utils/supabase/client';
 
-// ... (KEEP ALL TYPES AND DATA CONSTANTS FROM PREVIOUS STEPS) ...
-// Ensure PAYMENT_METHODS uses the new addresses you provided earlier
-
-// --- UPDATE CONSTANTS ---
-// (Make sure to include all constants like PLATFORMS, PAYMENT_METHODS from the previous dashboard code I gave you)
-// I will provide the FULL block below so you can just copy-paste.
-
-// ... FULL CODE BLOCK BELOW ...
-
 // --- TYPES ---
 type Account = {
   id: string;
@@ -298,7 +289,29 @@ export default function Dashboard() {
       setTimeout(() => setCopySuccess(false), 2000); 
   };
 
-  if (loading) return <div className="min-h-screen bg-[#050505] text-white flex items-center justify-center">Loading Console...</div>;
+  // --- NEW LOADING SCREEN ---
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center">
+        <div className="relative w-20 h-20 mb-6">
+           {/* Outer Glow */}
+           <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full animate-pulse"></div>
+           {/* Spinning Ring */}
+           <div className="absolute inset-0 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+           {/* Inner Static Ring */}
+           <div className="absolute inset-4 border-2 border-white/10 rounded-full"></div>
+           {/* Center Dot */}
+           <div className="absolute inset-0 flex items-center justify-center">
+               <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
+           </div>
+        </div>
+        <div className="flex flex-col items-center space-y-2">
+            <span className="text-white text-lg font-bold tracking-widest uppercase">TradeCore</span>
+            <span className="text-blue-500 text-[10px] font-mono animate-pulse">INITIALIZING CONSOLE...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F2F4F8] dark:bg-[#050505] text-[#1a1a1a] dark:text-white font-sans flex overflow-hidden">
@@ -362,9 +375,9 @@ export default function Dashboard() {
                </div>
                <div className={`space-y-1 overflow-hidden transition-all duration-300 ease-in-out ${openSections.trading ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
                    <div className="px-3">
-                        <SidebarItem icon="users" label="Real Accounts" active={activePage === 'accounts'} onClick={() => handleNavClick('accounts')} />
-                        <SidebarItem icon="chart" label="Performance" active={activePage === 'perf'} onClick={() => handleNavClick('perf')} />
-                        <SidebarItem icon="history" label="Trade History" active={activePage === 'history'} onClick={() => handleNavClick('history')} />
+                       <SidebarItem icon="users" label="Real Accounts" active={activePage === 'accounts'} onClick={() => handleNavClick('accounts')} />
+                       <SidebarItem icon="chart" label="Performance" active={activePage === 'perf'} onClick={() => handleNavClick('perf')} />
+                       <SidebarItem icon="history" label="Trade History" active={activePage === 'history'} onClick={() => handleNavClick('history')} />
                    </div>
                </div>
            </div>
@@ -377,8 +390,8 @@ export default function Dashboard() {
                </div>
                <div className={`space-y-1 overflow-hidden transition-all duration-300 ease-in-out ${openSections.growth ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
                    <div className="px-3">
-                        <SidebarItem icon="gift" label="Referrals" active={activePage === 'referrals'} onClick={() => handleNavClick('referrals')} />
-                        <SidebarItem icon="trophy" label="Bonuses" active={activePage === 'bonuses'} onClick={() => handleNavClick('bonuses')} />
+                       <SidebarItem icon="gift" label="Referrals" active={activePage === 'referrals'} onClick={() => handleNavClick('referrals')} />
+                       <SidebarItem icon="trophy" label="Bonuses" active={activePage === 'bonuses'} onClick={() => handleNavClick('bonuses')} />
                    </div>
                </div>
            </div>
@@ -391,9 +404,9 @@ export default function Dashboard() {
                </div>
                <div className={`space-y-1 overflow-hidden transition-all duration-300 ease-in-out ${openSections.funds ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
                    <div className="px-3">
-                        <SidebarItem icon="download" label="Deposit" active={activePage === 'deposit'} onClick={() => { handleNavClick('deposit'); }} />
-                        <SidebarItem icon="upload" label="Withdraw" active={activePage === 'withdraw'} onClick={() => { handleNavClick('withdraw'); }} />
-                        <SidebarItem icon="list" label="Transactions" active={activePage === 'trans'} onClick={() => handleNavClick('trans')} />
+                       <SidebarItem icon="download" label="Deposit" active={activePage === 'deposit'} onClick={() => { handleNavClick('deposit'); }} />
+                       <SidebarItem icon="upload" label="Withdraw" active={activePage === 'withdraw'} onClick={() => { handleNavClick('withdraw'); }} />
+                       <SidebarItem icon="list" label="Transactions" active={activePage === 'trans'} onClick={() => handleNavClick('trans')} />
                    </div>
                </div>
            </div>
@@ -406,7 +419,7 @@ export default function Dashboard() {
                </div>
                <div className={`space-y-1 overflow-hidden transition-all duration-300 ease-in-out ${openSections.settings ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
                    <div className="px-3">
-                        <SidebarItem icon="user" label="Profile" active={activePage === 'profile'} onClick={() => handleNavClick('profile')} />
+                       <SidebarItem icon="user" label="Profile" active={activePage === 'profile'} onClick={() => handleNavClick('profile')} />
                    </div>
                </div>
            </div>
@@ -469,8 +482,8 @@ export default function Dashboard() {
                             <div className="absolute top-full left-0 w-full mt-2 bg-[#1A1A1A] border border-white/10 rounded-xl shadow-xl overflow-hidden z-50 max-h-60 overflow-y-auto scrollbar-hide">
                                 {PLATFORMS.map(p => (
                                     <div key={p.id} onClick={() => { setSelectedPlatform(p); setIsPlatformDropdownOpen(false); }} className={`px-4 py-3 cursor-pointer transition flex items-center justify-between ${selectedPlatform.id === p.id ? 'bg-blue-600/10 border-l-2 border-blue-500' : 'hover:bg-white/5 border-l-2 border-transparent'}`}>
-                                        <div className="flex flex-col"><span className={`text-sm font-bold ${selectedPlatform.id === p.id ? 'text-blue-400' : 'text-white'}`}>{p.name}</span><span className="text-[10px] text-gray-500">{p.desc}</span></div>
-                                        {selectedPlatform.id === p.id && <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 text-blue-500"><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>}
+                                            <div className="flex flex-col"><span className={`text-sm font-bold ${selectedPlatform.id === p.id ? 'text-blue-400' : 'text-white'}`}>{p.name}</span><span className="text-[10px] text-gray-500">{p.desc}</span></div>
+                                            {selectedPlatform.id === p.id && <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 text-blue-500"><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>}
                                     </div>
                                 ))}
                             </div>
@@ -606,11 +619,11 @@ export default function Dashboard() {
                                 const isToday = i === processedGraphData.dataPoints.length - 1 && graphFilter !== '1y';
                                 return (
                                     <div key={i} className="flex-1 flex flex-col items-center justify-end h-full group relative">
-                                        <div className={`w-full rounded-t-sm transition-all duration-700 relative ${isToday ? 'bg-blue-500' : 'bg-blue-600/30 group-hover:bg-blue-500/80'}`} style={{ height: `${height}%` }}>
-                                            <div className="opacity-0 group-hover:opacity-100 absolute -top-12 left-1/2 -translate-x-1/2 bg-[#111] border border-white/20 text-white text-xs font-bold px-3 py-2 rounded-lg shadow-xl transition-all duration-200 pointer-events-none z-10 whitespace-nowrap flex flex-col items-center">
-                                                <span className="text-[10px] text-gray-400 font-normal mb-0.5">{processedGraphData.labels[i]}</span><span>{val} Users</span><div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-[#111] border-r border-b border-white/20 rotate-45"></div>
+                                            <div className={`w-full rounded-t-sm transition-all duration-700 relative ${isToday ? 'bg-blue-500' : 'bg-blue-600/30 group-hover:bg-blue-500/80'}`} style={{ height: `${height}%` }}>
+                                                <div className="opacity-0 group-hover:opacity-100 absolute -top-12 left-1/2 -translate-x-1/2 bg-[#111] border border-white/20 text-white text-xs font-bold px-3 py-2 rounded-lg shadow-xl transition-all duration-200 pointer-events-none z-10 whitespace-nowrap flex flex-col items-center">
+                                                    <span className="text-[10px] text-gray-400 font-normal mb-0.5">{processedGraphData.labels[i]}</span><span>{val} Users</span><div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-[#111] border-r border-b border-white/20 rotate-45"></div>
+                                                </div>
                                             </div>
-                                        </div>
                                     </div>
                                 );
                             })}
@@ -677,14 +690,14 @@ export default function Dashboard() {
                                >
                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl font-bold ${method.bg} ${method.color} flex-shrink-0`}>{method.icon}</div>
                                    <div className="flex-1">
-                                       <div className="flex justify-between items-center mb-1">
-                                           <h4 className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-blue-400 transition">{method.name}</h4>
-                                           {method.status === 'soon' && <span className="text-[9px] bg-white/10 px-2 py-0.5 rounded text-gray-400">SOON</span>}
-                                       </div>
-                                       <div className="flex gap-3 text-[10px] text-gray-500">
-                                           <span>Fee: <span className="text-white">0%</span></span>
-                                           <span>Time: <span className="text-white">{method.time}</span></span>
-                                       </div>
+                                        <div className="flex justify-between items-center mb-1">
+                                             <h4 className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-blue-400 transition">{method.name}</h4>
+                                             {method.status === 'soon' && <span className="text-[9px] bg-white/10 px-2 py-0.5 rounded text-gray-400">SOON</span>}
+                                        </div>
+                                        <div className="flex gap-3 text-[10px] text-gray-500">
+                                             <span>Fee: <span className="text-white">0%</span></span>
+                                             <span>Time: <span className="text-white">{method.time}</span></span>
+                                        </div>
                                    </div>
                                </div>
                            ))}
@@ -743,32 +756,32 @@ export default function Dashboard() {
                                 >
                                     <div className="flex items-center gap-3">
                                          {selectedWithdrawMethod ? (
-                                             <>
+                                            <>
                                                 <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${selectedWithdrawMethod.bg} ${selectedWithdrawMethod.color}`}>{selectedWithdrawMethod.icon}</div>
                                                 <span className="font-bold text-sm">{selectedWithdrawMethod.name}</span>
-                                             </>
+                                           </>
                                          ) : <span className="text-gray-500 text-sm">Select Method</span>}
                                     </div>
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${isWithdrawDropdownOpen ? 'rotate-180' : ''}`}><path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
                                 </button>
                                 {isWithdrawDropdownOpen && (
                                     <div className="absolute top-full left-0 w-full mt-2 bg-[#1A1A1A] border border-white/10 rounded-xl shadow-xl overflow-hidden z-50 max-h-60 overflow-y-auto scrollbar-hide">
-                                        {PAYMENT_METHODS.map(m => (
-                                            <div 
-                                                key={m.id} 
-                                                onClick={() => { 
-                                                    if(m.status !== 'soon') {
-                                                        setSelectedWithdrawMethod(m); 
-                                                        setIsWithdrawDropdownOpen(false); 
-                                                    }
-                                                }}
-                                                className={`px-4 py-3 transition flex items-center gap-3 ${m.status === 'soon' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-white/5'} ${selectedWithdrawMethod?.id === m.id ? 'bg-blue-600/10 border-l-2 border-blue-500' : 'border-l-2 border-transparent'}`}
-                                            >
-                                                 <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${m.bg} ${m.color}`}>{m.icon}</div>
-                                                <span className={`text-sm font-bold ${selectedWithdrawMethod?.id === m.id ? 'text-blue-400' : 'text-white'}`}>{m.name}</span>
-                                                {m.status === 'soon' && <span className="ml-auto text-[9px] bg-white/10 px-2 py-0.5 rounded text-gray-400">SOON</span>}
-                                            </div>
-                                        ))}
+                                            {PAYMENT_METHODS.map(m => (
+                                                <div 
+                                                    key={m.id} 
+                                                    onClick={() => { 
+                                                        if(m.status !== 'soon') {
+                                                            setSelectedWithdrawMethod(m); 
+                                                            setIsWithdrawDropdownOpen(false); 
+                                                        }
+                                                    }}
+                                                    className={`px-4 py-3 transition flex items-center gap-3 ${m.status === 'soon' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-white/5'} ${selectedWithdrawMethod?.id === m.id ? 'bg-blue-600/10 border-l-2 border-blue-500' : 'border-l-2 border-transparent'}`}
+                                                >
+                                                         <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${m.bg} ${m.color}`}>{m.icon}</div>
+                                                        <span className={`text-sm font-bold ${selectedWithdrawMethod?.id === m.id ? 'text-blue-400' : 'text-white'}`}>{m.name}</span>
+                                                        {m.status === 'soon' && <span className="ml-auto text-[9px] bg-white/10 px-2 py-0.5 rounded text-gray-400">SOON</span>}
+                                                </div>
+                                            ))}
                                     </div>
                                 )}
                             </div>
@@ -895,53 +908,53 @@ export default function Dashboard() {
              {/* --- 8. PERFORMANCE VIEW (UPDATED) --- */}
             {activePage === 'perf' && (
                <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in zoom-in-95 duration-300">
-                   <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                       <h2 className="text-2xl font-bold text-white">Performance Analytics</h2>
-                       <div className="flex bg-black/30 p-1 rounded-lg border border-white/10">
+                    <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                        <h2 className="text-2xl font-bold text-white">Performance Analytics</h2>
+                        <div className="flex bg-black/30 p-1 rounded-lg border border-white/10">
                             {['1D', '1W', '1M', '1Y', 'All'].map((t) => (
                                 <button key={t} onClick={() => setPerfTimeframe(t)} className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${perfTimeframe === t ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>{t}</button>
                             ))}
-                       </div>
-                   </div>
+                        </div>
+                    </div>
 
-                   {/* MAIN CHART (FLAT LINE 0) */}
-                   <div className="bg-[#111] border border-white/10 rounded-2xl p-6 h-[300px] relative overflow-hidden group">
-                       <div className="absolute top-6 left-6 z-10">
-                           <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Total Net Profit</p>
-                           <p className="text-3xl font-mono font-bold text-white mt-1">$0.00 <span className="text-sm text-gray-500 font-sans font-normal">(0.00%)</span></p>
-                       </div>
-                       
-                       <div className="absolute inset-0 grid grid-cols-6 grid-rows-4 pointer-events-none">
-                           {[...Array(24)].map((_, i) => <div key={i} className="border-r border-b border-white/5"></div>)}
-                       </div>
+                    {/* MAIN CHART (FLAT LINE 0) */}
+                    <div className="bg-[#111] border border-white/10 rounded-2xl p-6 h-[300px] relative overflow-hidden group">
+                        <div className="absolute top-6 left-6 z-10">
+                            <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Total Net Profit</p>
+                            <p className="text-3xl font-mono font-bold text-white mt-1">$0.00 <span className="text-sm text-gray-500 font-sans font-normal">(0.00%)</span></p>
+                        </div>
+                        
+                        <div className="absolute inset-0 grid grid-cols-6 grid-rows-4 pointer-events-none">
+                            {[...Array(24)].map((_, i) => <div key={i} className="border-r border-b border-white/5"></div>)}
+                        </div>
 
-                       <div className="absolute bottom-10 left-0 right-0 h-px bg-blue-500/50"></div>
-                       <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-blue-500/10 to-transparent"></div>
-                       
-                       <div className="absolute inset-0 flex items-center justify-center">
-                           <p className="text-sm text-gray-600 font-medium">No trade data available to display.</p>
-                       </div>
-                   </div>
+                        <div className="absolute bottom-10 left-0 right-0 h-px bg-blue-500/50"></div>
+                        <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-blue-500/10 to-transparent"></div>
+                        
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <p className="text-sm text-gray-600 font-medium">No trade data available to display.</p>
+                        </div>
+                    </div>
 
-                   {/* DETAILED STATS GRID (ALL 0) */}
-                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                       {[
-                           { label: 'Total Trades', val: '0' },
-                           { label: 'Profit Factor', val: '0.00' },
-                           { label: 'Win Rate', val: '0%' },
-                           { label: 'Sharpe Ratio', val: '0.00' },
-                           { label: 'Best Trade', val: '$0.00' },
-                           { label: 'Worst Trade', val: '$0.00' },
-                           { label: 'Avg Win', val: '$0.00' },
-                           { label: 'Avg Loss', val: '$0.00' },
-                       ].map((stat, i) => (
-                           <div key={i} className="bg-[#111] border border-white/5 rounded-xl p-5 hover:border-white/10 transition">
-                               <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-2">{stat.label}</p>
-                               <p className="text-xl font-mono font-bold text-white">{stat.val}</p>
-                           </div>
-                       ))}
-                   </div>
-               </div>
+                    {/* DETAILED STATS GRID (ALL 0) */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {[
+                            { label: 'Total Trades', val: '0' },
+                            { label: 'Profit Factor', val: '0.00' },
+                            { label: 'Win Rate', val: '0%' },
+                            { label: 'Sharpe Ratio', val: '0.00' },
+                            { label: 'Best Trade', val: '$0.00' },
+                            { label: 'Worst Trade', val: '$0.00' },
+                            { label: 'Avg Win', val: '$0.00' },
+                            { label: 'Avg Loss', val: '$0.00' },
+                        ].map((stat, i) => (
+                            <div key={i} className="bg-[#111] border border-white/5 rounded-xl p-5 hover:border-white/10 transition">
+                                <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-2">{stat.label}</p>
+                                <p className="text-xl font-mono font-bold text-white">{stat.val}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             )}
 
         </div>
