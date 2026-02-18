@@ -58,7 +58,7 @@ const BONUSES = [
     id: 'referral200', 
     title: '200% Deposit Match', 
     desc: 'Unlock double trading power by referring 5 active friends.', 
-    progress: 20, 
+    progress: 0, 
     target: 100, 
     status: 'active',
     color: 'text-yellow-500',
