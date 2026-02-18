@@ -471,7 +471,7 @@ export default function Dashboard() {
                <div className={`space-y-1 overflow-hidden transition-all duration-300 ease-in-out ${openSections.trading ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
                    <div className="px-3">
                        <SidebarItem icon="users" label="Real Accounts" active={activePage === 'accounts'} onClick={() => handleNavClick('accounts')} />
-                       <SidebarItem icon="chart" label="Performance" active={activePage === 'perf'} onClick={() => handleNavClick('perf')} />
+                       <SidebarItem icon="chart" label="Performance" active={activePage === 'perf2'} onClick={() => handleNavClick('perf')} />
                        <SidebarItem icon="history" label="Trade History" active={activePage === 'history'} onClick={() => handleNavClick('history')} />
                    </div>
                </div>
