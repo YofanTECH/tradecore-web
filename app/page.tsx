@@ -399,26 +399,22 @@ export default function Home() {
         </div>
       </section>
 
-      {/* --- 4. PARTNERS SECTION (COMPACT & SEAMLESS & PAUSABLE) --- */}
+      {/* --- 4. PARTNERS SECTION --- */}
       <section className="py-24 border-t border-white/5 bg-black z-10 relative overflow-hidden group">
         <div className="max-w-4xl mx-auto px-6">
           <p className="text-gray-600 text-xs uppercase tracking-widest mb-12 text-center font-bold">Official Trading Partners</p>
           
           <div className="relative w-full overflow-hidden mask-gradient-x">
-             {/* SIDE FADES */}
              <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-black via-black/80 to-transparent z-20 pointer-events-none"></div>
              <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-black via-black/80 to-transparent z-20 pointer-events-none"></div>
 
-             {/* SLIDING TRACK (DOUBLE TRACK FOR SEAMLESS LOOP) */}
              <div className="flex gap-16 w-max animate-marquee group-hover:[animation-play-state:paused]">
-                {/* SET 1 */}
+                {/* PARTNERS LOOP */}
                 <div className="flex items-center gap-16 shrink-0">
-                   {/* McLaren */}
                    <div className="flex items-center gap-2 opacity-50 hover:opacity-100 transition-all duration-300 grayscale hover:grayscale-0">
                       <span className="text-xl font-extrabold italic text-white tracking-tighter">McLaren</span>
                       <div className="w-4 h-4 bg-orange-600 rounded-tr-md rounded-bl-md skew-x-12"></div>
                    </div>
-                   {/* FundedNext */}
                    <div className="flex items-center gap-2 opacity-50 hover:opacity-100 transition-all duration-300">
                       <div className="flex gap-0.5">
                         <div className="w-1.5 h-3 bg-blue-600 -skew-x-12"></div>
@@ -426,26 +422,21 @@ export default function Home() {
                       </div>
                       <span className="text-lg font-bold text-white">Funded<span className="text-blue-500">Next</span></span>
                    </div>
-                   {/* Bloomberg (COLOR FIXED) */}
                    <div className="flex items-center gap-2 opacity-50 hover:opacity-100 transition-all duration-300">
                       <span className="text-xl font-bold text-white">Bloomberg</span>
                       <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div> 
                    </div>
-                   {/* TradingView */}
                    <div className="flex items-center gap-2 opacity-50 hover:opacity-100 transition-all duration-300">
                       <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M21 7a.78.78 0 0 0 0-.21.64.64 0 0 0-.05-.17 1.1 1.1 0 0 0-.09-.14.75.75 0 0 0-.14-.17l-.12-.07a.69.69 0 0 0-.19-.1h-.2A.7.7 0 0 0 20 6h-5a1 1 0 0 0 0 2h2.83l-4 4.71-4.32-2.57a1 1 0 0 0-1.28.22l-5 6a1 1 0 0 0 .13 1.41A1 1 0 0 0 4 18a1 1 0 0 0 .77-.36l4.45-5.34 4.27 2.56a1 1 0 0 0 1.27-.21L19 9.7V12a1 1 0 0 0 2 0V7z"/></svg>
                       <span className="text-lg font-bold text-white">TradingView</span>
                    </div>
                 </div>
-
-                {/* SET 2 (DUPLICATE FOR SEAMLESS LOOP) */}
+                {/* DUPLICATE SET FOR LOOPING */}
                 <div className="flex items-center gap-16 shrink-0">
-                   {/* McLaren */}
                    <div className="flex items-center gap-2 opacity-50 hover:opacity-100 transition-all duration-300 grayscale hover:grayscale-0">
                       <span className="text-xl font-extrabold italic text-white tracking-tighter">McLaren</span>
                       <div className="w-4 h-4 bg-orange-600 rounded-tr-md rounded-bl-md skew-x-12"></div>
                    </div>
-                   {/* FundedNext */}
                    <div className="flex items-center gap-2 opacity-50 hover:opacity-100 transition-all duration-300">
                       <div className="flex gap-0.5">
                         <div className="w-1.5 h-3 bg-blue-600 -skew-x-12"></div>
@@ -453,12 +444,10 @@ export default function Home() {
                       </div>
                       <span className="text-lg font-bold text-white">Funded<span className="text-blue-500">Next</span></span>
                    </div>
-                   {/* Bloomberg (COLOR FIXED) */}
                    <div className="flex items-center gap-2 opacity-50 hover:opacity-100 transition-all duration-300">
                       <span className="text-xl font-bold text-white">Bloomberg</span>
                       <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div> 
                    </div>
-                   {/* TradingView */}
                    <div className="flex items-center gap-2 opacity-50 hover:opacity-100 transition-all duration-300">
                       <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M21 7a.78.78 0 0 0 0-.21.64.64 0 0 0-.05-.17 1.1 1.1 0 0 0-.09-.14.75.75 0 0 0-.14-.17l-.12-.07a.69.69 0 0 0-.19-.1h-.2A.7.7 0 0 0 20 6h-5a1 1 0 0 0 0 2h2.83l-4 4.71-4.32-2.57a1 1 0 0 0-1.28.22l-5 6a1 1 0 0 0 .13 1.41A1 1 0 0 0 4 18a1 1 0 0 0 .77-.36l4.45-5.34 4.27 2.56a1 1 0 0 0 1.27-.21L19 9.7V12a1 1 0 0 0 2 0V7z"/></svg>
                       <span className="text-lg font-bold text-white">TradingView</span>
@@ -469,40 +458,46 @@ export default function Home() {
         </div>
       </section>
 
-      {/* --- FOOTER --- */}
+      {/* --- FOOTER (MOBILE OPTIMIZED: SIDE-BY-SIDE LISTS) --- */}
       <footer className="border-t border-white/5 bg-black py-16 md:py-20 relative z-10">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12 mb-12 md:mb-16 text-left">
-            <div className="col-span-1">
+          <div className="flex flex-col md:flex-row gap-12 mb-16">
+            
+            {/* LOGO & DESC - Top on Mobile, Left on Desktop */}
+            <div className="w-full md:w-1/4">
               <span className="text-2xl font-bold text-white">TRADE<span className="text-blue-500">CORE</span></span>
               <p className="text-gray-500 text-sm mt-4 leading-relaxed">
                 The world's leading premium broker. Licensed and regulated.
               </p>
             </div>
-            <div>
-              <h4 className="text-white font-bold mb-4 md:mb-6">Markets</h4>
-              <ul className="space-y-2 md:space-y-3 text-gray-500 text-sm">
-                <li><a href="https://www.tradingview.com/markets/currencies/" target="_blank" className="hover:text-blue-500 transition-colors">Forex</a></li>
-                <li><a href="https://www.tradingview.com/markets/indices/" target="_blank" className="hover:text-blue-500 transition-colors">Indices</a></li>
-                <li><a href="https://www.tradingview.com/markets/futures/" target="_blank" className="hover:text-blue-500 transition-colors">Commodities</a></li>
-                <li><a href="https://www.tradingview.com/markets/cryptocurrencies/" target="_blank" className="hover:text-blue-500 transition-colors">Crypto</a></li>
-              </ul>
-            </div>
-            <div>
-               <h4 className="text-white font-bold mb-4 md:mb-6">Company</h4>
-               <ul className="space-y-2 md:space-y-3 text-gray-500 text-sm">
-                 <li><Link href="/company/about" className="hover:text-blue-500 transition-colors">About Us</Link></li>
-                 <li><Link href="/company/partnership" className="hover:text-blue-500 transition-colors">Partnership</Link></li>
-                 <li><Link href="/company/contact" className="hover:text-blue-500 transition-colors">Contact</Link></li>
-               </ul>
-            </div>
-             <div>
-               <h4 className="text-white font-bold mb-4 md:mb-6">Legal</h4>
-               <ul className="space-y-2 md:space-y-3 text-gray-500 text-sm">
-                 <li><Link href="/legal/privacy" className="hover:text-blue-500 transition-colors">Privacy Policy</Link></li>
-                 <li><Link href="/legal/risk" className="hover:text-blue-500 transition-colors">Risk Disclosure</Link></li>
-                 <li><Link href="/legal/terms" className="hover:text-blue-500 transition-colors">Terms of Service</Link></li>
-               </ul>
+
+            {/* LINKS - Side-by-Side (3 Cols) on Mobile & Desktop */}
+            <div className="w-full md:w-3/4 grid grid-cols-3 gap-4 md:gap-12">
+                <div>
+                  <h4 className="text-white font-bold mb-4 md:mb-6">Markets</h4>
+                  <ul className="space-y-3 text-gray-500 text-sm">
+                    <li><a href="https://www.tradingview.com/markets/currencies/" target="_blank" className="hover:text-blue-500 transition-colors">Forex</a></li>
+                    <li><a href="https://www.tradingview.com/markets/indices/" target="_blank" className="hover:text-blue-500 transition-colors">Indices</a></li>
+                    <li><a href="https://www.tradingview.com/markets/futures/" target="_blank" className="hover:text-blue-500 transition-colors">Commodities</a></li>
+                    <li><a href="https://www.tradingview.com/markets/cryptocurrencies/" target="_blank" className="hover:text-blue-500 transition-colors">Crypto</a></li>
+                  </ul>
+                </div>
+                <div>
+                   <h4 className="text-white font-bold mb-4 md:mb-6">Company</h4>
+                   <ul className="space-y-3 text-gray-500 text-sm">
+                     <li><Link href="/company/about" className="hover:text-blue-500 transition-colors">About Us</Link></li>
+                     <li><Link href="/company/partnership" className="hover:text-blue-500 transition-colors">Partnership</Link></li>
+                     <li><Link href="/company/contact" className="hover:text-blue-500 transition-colors">Contact</Link></li>
+                   </ul>
+                </div>
+                 <div>
+                   <h4 className="text-white font-bold mb-4 md:mb-6">Legal</h4>
+                   <ul className="space-y-3 text-gray-500 text-sm">
+                     <li><Link href="/legal/privacy" className="hover:text-blue-500 transition-colors">Privacy Policy</Link></li>
+                     <li><Link href="/legal/risk" className="hover:text-blue-500 transition-colors">Risk Disclosure</Link></li>
+                     <li><Link href="/legal/terms" className="hover:text-blue-500 transition-colors">Terms of Service</Link></li>
+                   </ul>
+                </div>
             </div>
           </div>
           
