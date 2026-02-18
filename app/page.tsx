@@ -7,6 +7,7 @@ export default function Home() {
   const [scrolled, setScrolled] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false); // New State for Mobile Menu
 
   // --- REAL RANDOMIZED DATA ---
   const [stats, setStats] = useState({
@@ -154,12 +155,17 @@ export default function Home() {
       {/* --- NAVIGATION BAR --- */}
       <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? 'bg-[#050505]/95 backdrop-blur-xl border-b border-white/5 py-4' : 'bg-transparent py-6'}`}>
         <div className="max-w-7xl mx-auto px-6 lg:px-8 flex items-center justify-between relative">
-          <div className="flex-shrink-0 cursor-pointer group">
-            <span className="text-2xl font-bold tracking-tighter text-white">
-              TRADE<span className="text-blue-500">CORE</span>
-            </span>
+          
+          {/* Logo */}
+          <div className="flex-shrink-0 cursor-pointer group z-50">
+            <Link href="/">
+                <span className="text-2xl font-bold tracking-tighter text-white">
+                TRADE<span className="text-blue-500">CORE</span>
+                </span>
+            </Link>
           </div>
           
+          {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-1" onMouseLeave={() => setActiveDropdown(null)}>
             <Link href="/markets" className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white transition-all duration-300 rounded-lg hover:bg-white/5">Markets</Link>
             
@@ -180,7 +186,6 @@ export default function Home() {
                       <div className="relative z-10 p-8 grid grid-cols-5 gap-8">
                           
                           {/* --- LEFT SIDE: IMAGE FIX --- */}
-                          {/* CHANGED TOP-12 to TOP-6 HERE */}
                           <div className="col-span-2 relative rounded-xl overflow-hidden group/card transition-all h-full min-h-[380px] bg-gradient-to-b from-[#111] to-[#000]">
                              <div className="absolute inset-x-0 bottom-0 top-6"> 
                                  <img 
@@ -250,12 +255,40 @@ export default function Home() {
             <Link href="/company/about" className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white transition-all duration-300 rounded-lg hover:bg-white/5">Company</Link>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-4">
             <Link href="/login?view=signin" className="hidden md:block text-sm font-medium text-gray-300 hover:text-white transition">Log In</Link>
             <Link href="/login?view=signup" className="bg-white hover:bg-gray-200 text-black px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 hover:scale-105">
                 Sign Up
             </Link>
           </div>
+
+          {/* MOBILE MENU BUTTON & OVERLAY */}
+          <button 
+             className="md:hidden text-white p-2 z-50 relative"
+             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+             {mobileMenuOpen ? (
+                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+             ) : (
+                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
+             )}
+          </button>
+
+          {/* Full Screen Mobile Menu */}
+          <div className={`fixed inset-0 bg-[#050505] z-40 flex flex-col justify-center items-center transition-all duration-300 ${mobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}>
+             <div className="flex flex-col space-y-6 text-center">
+                 <Link href="/markets" className="text-3xl font-bold text-white hover:text-blue-500" onClick={() => setMobileMenuOpen(false)}>Markets</Link>
+                 <Link href="/apps" className="text-3xl font-bold text-white hover:text-blue-500" onClick={() => setMobileMenuOpen(false)}>Apps</Link>
+                 <Link href="/tools" className="text-3xl font-bold text-white hover:text-blue-500" onClick={() => setMobileMenuOpen(false)}>Tools</Link>
+                 <Link href="/company/about" className="text-3xl font-bold text-white hover:text-blue-500" onClick={() => setMobileMenuOpen(false)}>Company</Link>
+                 
+                 <div className="w-12 h-px bg-white/10 mx-auto my-4"></div>
+
+                 <Link href="/login?view=signin" className="text-xl text-gray-400 hover:text-white" onClick={() => setMobileMenuOpen(false)}>Log In</Link>
+                 <Link href="/login?view=signup" className="px-8 py-4 bg-blue-600 rounded-full text-white font-bold text-xl" onClick={() => setMobileMenuOpen(false)}>Sign Up</Link>
+             </div>
+          </div>
+
         </div>
       </nav>
 
@@ -280,10 +313,10 @@ export default function Home() {
             <br className="hidden md:block"/> Forex. Crypto. Indices. Gold.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4 md:gap-6">
-            <Link href="/login?view=signup" className="px-10 py-4 md:px-12 md:py-5 bg-blue-600 text-white rounded-lg font-bold text-base md:text-lg hover:bg-blue-500 transition-all duration-300 shadow-[0_0_50px_rgba(37,99,235,0.3)] hover:-translate-y-1">
+            <Link href="/login?view=signup" className="px-10 py-4 md:px-12 md:py-5 bg-blue-600 text-white rounded-lg font-bold text-base md:text-lg hover:bg-blue-500 transition-all duration-300 shadow-[0_0_50px_rgba(37,99,235,0.3)] hover:-translate-y-1 text-center">
               Start Trading Now
             </Link>
-            <Link href="/markets" className="flex items-center justify-center px-10 py-4 md:px-12 md:py-5 border border-white/10 text-white rounded-lg font-bold text-base md:text-lg hover:bg-white/5 transition-all duration-300 backdrop-blur-sm">
+            <Link href="/markets" className="flex items-center justify-center px-10 py-4 md:px-12 md:py-5 border border-white/10 text-white rounded-lg font-bold text-base md:text-lg hover:bg-white/5 transition-all duration-300 backdrop-blur-sm text-center">
               View Markets
             </Link>
           </div>
