@@ -92,46 +92,10 @@ export default function Home() {
         "width": "100%",
         "height": "600",
         "tabs": [
-          {
-            "title": "Metals",
-            "symbols": [
-              { "s": "OANDA:XAUUSD", "d": "Gold Spot" },
-              { "s": "OANDA:XAGUSD", "d": "Silver Spot" },
-              { "s": "OANDA:XPTUSD", "d": "Platinum" },
-              { "s": "TVC:USOIL", "d": "US Oil (WTI)" },
-              { "s": "TVC:UKOIL", "d": "Brent Oil" }
-            ]
-          },
-          {
-            "title": "Indices",
-            "symbols": [
-              { "s": "FOREXCOM:SPXUSD", "d": "S&P 500" },
-              { "s": "FOREXCOM:NSXUSD", "d": "Nasdaq 100" },
-              { "s": "FOREXCOM:DJI", "d": "Dow 30" },
-              { "s": "INDEX:NKY", "d": "Nikkei 225" },
-              { "s": "INDEX:DEU40", "d": "DAX 40" }
-            ]
-          },
-          {
-            "title": "Crypto",
-            "symbols": [
-              { "s": "BITSTAMP:BTCUSD", "d": "Bitcoin" },
-              { "s": "BITSTAMP:ETHUSD", "d": "Ethereum" },
-              { "s": "BINANCE:SOLUSDT", "d": "Solana" },
-              { "s": "BINANCE:XRPUSDT", "d": "XRP" },
-              { "s": "BINANCE:DOGEUSDT", "d": "Dogecoin" }
-            ]
-          },
-          {
-            "title": "Forex",
-            "symbols": [
-              { "s": "FX:EURUSD", "d": "EUR/USD" },
-              { "s": "FX:GBPUSD", "d": "GBP/USD" },
-              { "s": "FX:USDJPY", "d": "USD/JPY" },
-              { "s": "FX:USDCHF", "d": "USD/CHF" },
-              { "s": "FX:AUDUSD", "d": "AUD/USD" }
-            ]
-          }
+          { "title": "Metals", "symbols": [{ "s": "OANDA:XAUUSD", "d": "Gold Spot" }, { "s": "OANDA:XAGUSD", "d": "Silver Spot" }, { "s": "OANDA:XPTUSD", "d": "Platinum" }, { "s": "TVC:USOIL", "d": "US Oil (WTI)" }, { "s": "TVC:UKOIL", "d": "Brent Oil" }] },
+          { "title": "Indices", "symbols": [{ "s": "FOREXCOM:SPXUSD", "d": "S&P 500" }, { "s": "FOREXCOM:NSXUSD", "d": "Nasdaq 100" }, { "s": "FOREXCOM:DJI", "d": "Dow 30" }, { "s": "INDEX:NKY", "d": "Nikkei 225" }, { "s": "INDEX:DEU40", "d": "DAX 40" }] },
+          { "title": "Crypto", "symbols": [{ "s": "BITSTAMP:BTCUSD", "d": "Bitcoin" }, { "s": "BITSTAMP:ETHUSD", "d": "Ethereum" }, { "s": "BINANCE:SOLUSDT", "d": "Solana" }, { "s": "BINANCE:XRPUSDT", "d": "XRP" }, { "s": "BINANCE:DOGEUSDT", "d": "Dogecoin" }] },
+          { "title": "Forex", "symbols": [{ "s": "FX:EURUSD", "d": "EUR/USD" }, { "s": "FX:GBPUSD", "d": "GBP/USD" }, { "s": "FX:USDJPY", "d": "USD/JPY" }, { "s": "FX:USDCHF", "d": "USD/CHF" }, { "s": "FX:AUDUSD", "d": "AUD/USD" }] }
         ]
       });
       marketOverviewRef.current.appendChild(script);
@@ -215,16 +179,17 @@ export default function Home() {
                       {/* Content Layer */}
                       <div className="relative z-10 p-8 grid grid-cols-5 gap-8">
                           
-                          {/* --- LEFT SIDE: Just Image (FIXED CROPPING) --- */}
-                          {/* Increased min-h from 380px to 550px to fit the tall phone image */}
-                          <div className="col-span-2 relative rounded-xl overflow-hidden group/card transition-all h-full min-h-[550px]">
-                             <img 
-                                src="/xl_trade_without_tradeoffs_sm_454bd5e843.jpg" 
-                                alt="Trading App Preview" 
-                                className="absolute inset-0 w-full h-full object-cover opacity-100 select-none pointer-events-none" 
-                                draggable="false"
-                             />
-                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#0A0A0A]/20 to-[#0A0A0A]"></div>
+                          {/* --- LEFT SIDE: IMAGE FIX --- */}
+                          {/* Added pt-12 to push image down so it's not cropped */}
+                          <div className="col-span-2 relative rounded-xl overflow-hidden group/card transition-all h-full min-h-[380px] bg-gradient-to-b from-[#111] to-[#000]">
+                             <div className="absolute inset-x-0 bottom-0 top-12"> {/* Top-12 pushes it down */}
+                                 <img 
+                                    src="/chart.jpg" 
+                                    alt="Trading App Preview" 
+                                    className="w-full h-full object-cover object-top opacity-100 select-none pointer-events-none rounded-t-xl shadow-2xl" 
+                                    draggable="false"
+                                 />
+                             </div>
                           </div>
 
                           {/* --- RIGHT LINKS --- */}
@@ -359,9 +324,9 @@ export default function Home() {
       </div>
 
       {/* --- NEW REAL-TIME MARKET WATCH SECTION --- */}
-      <section className="py-20 bg-[#0A0A0A] border-b border-white/5 relative z-10">
+      <section className="py-32 bg-[#0A0A0A] border-b border-white/5 relative z-10">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-12">
+          <div className="text-center mb-16">
               <h2 className="text-3xl md:text-5xl font-bold mb-4">Live <span className="text-blue-500">Markets</span></h2>
               <p className="text-gray-400">Real-time pricing from global liquidity providers.</p>
           </div>
@@ -412,8 +377,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* --- LIVE STATS --- */}
-      <section className="py-24 bg-[#050505] border-t border-white/5 relative z-10">
+      {/* --- LIVE STATS (ADDED SPACING) --- */}
+      <section className="py-32 bg-[#050505] border-t border-white/5 relative z-10">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 text-center">
           <div className="group cursor-default hover:bg-white/5 p-4 md:p-6 rounded-xl transition-all">
             <div className="text-3xl md:text-5xl font-bold text-white mb-2 font-mono">${stats.volume ? stats.volume.toFixed(2) : '0.00'}B+</div>
@@ -435,9 +400,9 @@ export default function Home() {
       </section>
 
       {/* --- 4. PARTNERS SECTION (COMPACT & SEAMLESS & PAUSABLE) --- */}
-      <section className="py-10 border-t border-white/5 bg-black z-10 relative overflow-hidden group">
+      <section className="py-24 border-t border-white/5 bg-black z-10 relative overflow-hidden group">
         <div className="max-w-4xl mx-auto px-6">
-          <p className="text-gray-600 text-xs uppercase tracking-widest mb-8 text-center font-bold">Official Trading Partners</p>
+          <p className="text-gray-600 text-xs uppercase tracking-widest mb-12 text-center font-bold">Official Trading Partners</p>
           
           <div className="relative w-full overflow-hidden mask-gradient-x">
              {/* SIDE FADES */}
