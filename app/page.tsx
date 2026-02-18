@@ -283,9 +283,9 @@ export default function Home() {
             <Link href="/login?view=signup" className="px-10 py-4 md:px-12 md:py-5 bg-blue-600 text-white rounded-lg font-bold text-base md:text-lg hover:bg-blue-500 transition-all duration-300 shadow-[0_0_50px_rgba(37,99,235,0.3)] hover:-translate-y-1">
               Start Trading Now
             </Link>
-            <button className="px-10 py-4 md:px-12 md:py-5 border border-white/10 text-white rounded-lg font-bold text-base md:text-lg hover:bg-white/5 transition-all duration-300 backdrop-blur-sm">
+            <Link href="/markets" className="flex items-center justify-center px-10 py-4 md:px-12 md:py-5 border border-white/10 text-white rounded-lg font-bold text-base md:text-lg hover:bg-white/5 transition-all duration-300 backdrop-blur-sm">
               View Markets
-            </button>
+            </Link>
           </div>
         </div>
       </section>
@@ -472,7 +472,7 @@ export default function Home() {
       {/* --- FOOTER --- */}
       <footer className="border-t border-white/5 bg-black py-16 md:py-20 relative z-10">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12 mb-12 md:mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12 mb-12 md:mb-16 text-left">
             <div className="col-span-1">
               <span className="text-2xl font-bold text-white">TRADE<span className="text-blue-500">CORE</span></span>
               <p className="text-gray-500 text-sm mt-4 leading-relaxed">
