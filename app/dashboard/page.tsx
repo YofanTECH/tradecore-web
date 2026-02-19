@@ -374,7 +374,7 @@ export default function Dashboard() {
               videoRef.current.srcObject = stream;
           }
       } catch (err) {
-          triggerToast("Camera access denied or unavailable.", "error");
+          triggerToast("Camera access denied or unavailable. Please check permissions.", "error");
       }
   };
 
@@ -386,10 +386,10 @@ export default function Dashboard() {
   };
 
   const handleKYCSubmit = () => {
-      stopCamera();
       setKycProcessing(true);
+      stopCamera();
       
-      // Simulate Processing
+      // Simulate Processing (Made longer to look real)
       setTimeout(() => {
           setKycProcessing(false);
           setKycStatus('pending'); 
@@ -398,43 +398,51 @@ export default function Dashboard() {
           
           triggerToast("Documents submitted successfully!", "success");
           
-          // Simulate verification complete
+          // Simulate verification complete (Made longer 8s)
           setTimeout(() => {
               setKycStatus('verified'); 
               if(user) localStorage.setItem(`kycStatus_${user.id}`, 'verified'); // UPDATE PER USER
               triggerToast("Account Verified!", "success");
-          }, 4000);
-      }, 3000);
+          }, 8000);
+      }, 5000); // 5s Processing Time
   };
 
-  // Face Check Sequence Trigger for Step 3
+  // Face Check Sequence Trigger for Step 3 - Slow and Realistic
   useEffect(() => {
-      let interval: NodeJS.Timeout;
-      if (kycStep === 3 && activePage === 'kyc') {
-          startCamera();
-          let stepCounter = 0;
-          const instructions = [
-              "Look Left ⬅️",
-              "Look Right ➡️",
-              "Smile! 😊",
-              "Perfect! Verifying..."
-          ];
-          
-          interval = setInterval(() => {
-              if (stepCounter < instructions.length) {
-                  setLivenessInstruction(instructions[stepCounter]);
-                  stepCounter++;
-              } else {
-                  clearInterval(interval);
-                  handleKYCSubmit(); // Auto submit after sequence
-              }
-          }, 2500); 
+      let isCancelled = false; // cleanup flag
+
+      if (kycStep === 3 && activePage === 'kyc' && videoStream) {
+          const runSequence = async () => {
+              if (isCancelled) return;
+              setLivenessInstruction("Position your face in the circle...");
+              await new Promise(r => setTimeout(r, 4000));
+              
+              if (isCancelled) return;
+              setLivenessInstruction("Slowly turn your head to the Left ⬅️");
+              await new Promise(r => setTimeout(r, 4000));
+              
+              if (isCancelled) return;
+              setLivenessInstruction("Now, slowly turn to the Right ➡️");
+              await new Promise(r => setTimeout(r, 4000));
+              
+              if (isCancelled) return;
+              setLivenessInstruction("Look straight and Smile! 😊");
+              await new Promise(r => setTimeout(r, 4000));
+              
+              if (isCancelled) return;
+              setLivenessInstruction("Perfect! Capturing... 📸");
+              await new Promise(r => setTimeout(r, 2000));
+              
+              if (!isCancelled) handleKYCSubmit();
+          };
+          runSequence();
       }
+
       return () => {
-          if (interval) clearInterval(interval);
-          stopCamera();
+          isCancelled = true;
       };
-  }, [kycStep, activePage]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kycStep, activePage, videoStream]);
 
   // Cleanup camera on unmount or step change
   useEffect(() => {
@@ -467,8 +475,8 @@ export default function Dashboard() {
   const maxDateString = maxDate.toISOString().split('T')[0];
 
   return (
-    // STRICT DARK MODE ENABLED
-    <div className="min-h-screen bg-[#050505] text-white font-sans flex overflow-hidden">
+    // STRICT DARK MODE ENABLED & PROPORTIONAL LAYOUT FIX: Used h-screen and w-full
+    <div className="h-screen w-full bg-[#050505] text-white font-sans flex overflow-hidden">
       
       {/* Custom styles for cool calendar icon */}
       <style dangerouslySetInnerHTML={{__html: `
@@ -524,9 +532,9 @@ export default function Dashboard() {
           </div>
       </div>
 
-      {/* 2. SIDEBAR MENU - ADDED flex-shrink-0 for proportional fix */}
+      {/* 2. SIDEBAR MENU - Added flex-shrink-0 and h-full for proportional alignment */}
       <div className={`fixed top-0 left-0 h-full w-[280px] flex-shrink-0 bg-[#0A0A0A] border-r border-white/5 shadow-2xl z-[70] transform transition-transform duration-300 ease-out flex flex-col md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="h-16 flex items-center justify-between px-6 border-b border-white/5">
+        <div className="h-16 flex items-center justify-between px-6 border-b border-white/5 flex-shrink-0">
            <span className="text-xl font-bold tracking-tighter cursor-pointer select-none uppercase text-white" onClick={() => router.push('/')}>gav<span className="text-blue-500">blue</span></span>
            <button onClick={() => setIsSidebarOpen(false)} className="md:hidden text-gray-500"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
         </div>
@@ -592,7 +600,7 @@ export default function Dashboard() {
         </div>
 
         {/* SIDEBAR FOOTER */}
-        <div className="p-4 border-t border-white/5 bg-[#080808]">
+        <div className="p-4 border-t border-white/5 bg-[#080808] flex-shrink-0">
             <div className="flex items-center gap-2">
                 <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold shadow-md flex-shrink-0">
                     {user?.email?.charAt(0).toUpperCase()}
@@ -704,12 +712,12 @@ export default function Dashboard() {
       )}
 
       {/* =======================
-          MAIN CONTENT AREA - ADDED min-w-0 for proportional layout fix
+          MAIN CONTENT AREA - Added h-full and min-w-0 for precise screen fitting 
          ======================= */}
-      <main className="flex-1 flex flex-col relative h-screen overflow-hidden min-w-0">
+      <main className="flex-1 flex flex-col relative h-full overflow-hidden min-w-0 bg-[#050505]">
         
         {/* HEADER */}
-        <header className="h-16 border-b border-white/5 bg-[#0A0A0A] flex items-center justify-between px-4 md:px-6 z-30 flex-shrink-0">
+        <header className="h-16 border-b border-white/5 bg-[#0A0A0A] w-full flex items-center justify-between px-4 md:px-6 z-30 flex-shrink-0">
             {/* MENU BUTTON */}
             <div className="flex items-center gap-3 md:gap-4">
                 <button onClick={() => setIsSidebarOpen(true)} className="md:hidden text-gray-400 hover:text-white transition">
@@ -734,7 +742,7 @@ export default function Dashboard() {
         </header>
 
         {/* CONTENT */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-10 relative">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-10 relative w-full">
             
             {/* --- 1. PROFILE VIEW --- */}
             {activePage === 'profile' && (
@@ -783,7 +791,7 @@ export default function Dashboard() {
                </div>
             )}
 
-            {/* --- KYC PAGE (UPDATED WITH PERSISTENCE & CIRCLE CAMERA) --- */}
+            {/* --- KYC PAGE (UPDATED WITH REALISTIC TIMING & CIRCLE CAMERA) --- */}
             {activePage === 'kyc' && (
                 <div className="max-w-3xl mx-auto animate-in fade-in zoom-in-95 duration-300">
                     <div className="mb-6 md:mb-8 text-center md:text-left">
