@@ -4,8 +4,10 @@ import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 
 // ============================================================================
-// AI SUPPORT CHAT COMPONENT
+// AI SUPPORT CHAT COMPONENT (NOW POWERED BY REAL AI API)
 // ============================================================================
+const AGENT_NAMES = ["Elena", "Liam", "Sofia", "Mateo", "Yuki", "Amara", "Julian", "Chloe", "Kael", "Anya"];
+
 const AiSupportChat = () => {
     const [position, setPosition] = useState({ x: 30, y: 30 }); 
     const [isDragging, setIsDragging] = useState(false);
@@ -13,12 +15,21 @@ const AiSupportChat = () => {
     const [hasMoved, setHasMoved] = useState(false);
     
     const [isOpen, setIsOpen] = useState(false);
-    const [messages, setMessages] = useState<{role: 'ai'|'user', text: string}[]>([
-        { role: 'ai', text: "Hello! I am the Gavblue AI Assistant. How can I help you dominate the markets today?" }
-    ]);
+    const [agentName, setAgentName] = useState('Support');
+    
+    const [messages, setMessages] = useState<{role: 'ai'|'user', text: string}[]>([]);
     const [inputValue, setInputValue] = useState('');
     const [isTyping, setIsTyping] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    // Pick a random agent name on mount
+    useEffect(() => {
+        const randomName = AGENT_NAMES[Math.floor(Math.random() * AGENT_NAMES.length)];
+        setAgentName(randomName);
+        setMessages([
+            { role: 'ai', text: `Hello! My name is ${randomName}, your dedicated Gavblue Trading Specialist. How can I help you dominate the markets today?` }
+        ]);
+    }, []);
 
     // Auto-scroll to bottom of chat
     useEffect(() => {
@@ -73,45 +84,42 @@ const AiSupportChat = () => {
         if (!hasMoved) setIsOpen(!isOpen);
     };
 
-    // Strict AI Promotional Logic
-    const generateAiResponse = (input: string) => {
-        const lowerInput = input.toLowerCase();
-        
-        if (lowerInput.includes('bonus') || lowerInput.includes('promo') || lowerInput.includes('offer')) {
-            return "Gavblue offers an unmatched 200% First Deposit Bonus! It is absolutely the best way to double your trading capital instantly. You should open an account right now to claim it!";
-        }
-        if (lowerInput.includes('platform') || lowerInput.includes('mt4') || lowerInput.includes('mt5') || lowerInput.includes('tradingview')) {
-            return "We provide the ultimate trading experience! You can trade directly on MT4, MT5, cTrader, and seamlessly through TradingView. Gavblue's technology is lightyears ahead of the competition!";
-        }
-        if (lowerInput.includes('spread') || lowerInput.includes('fee') || lowerInput.includes('cost') || lowerInput.includes('commission')) {
-            return "Gavblue gives you institutional-grade liquidity with raw spreads starting from 0.0 pips and ZERO deposit fees. Our trading conditions are undeniably the best in the market.";
-        }
-        if (lowerInput.includes('scam') || lowerInput.includes('legit') || lowerInput.includes('safe') || lowerInput.includes('trust')) {
-            return "Gavblue is a fully licensed and heavily regulated premium broker. With 99.99% uptime and over 140,000 active traders globally, we are the most trusted and secure platform available today.";
-        }
-        if (lowerInput.includes('hello') || lowerInput.includes('hi') || lowerInput.includes('hey')) {
-            return "Welcome to Gavblue! As the world's most advanced trading platform, we offer everything you need to succeed. Have you seen our exclusive 200% deposit match yet?";
-        }
-        
-        // Default Fallback
-        return "That is an interesting question! While I am a specialized AI focused on Gavblue, I can confidently tell you that Gavblue is the ultimate platform for all your trading needs. No other broker offers our execution speeds and generous bonuses. Ready to open an account?";
-    };
-
-    const handleSendMessage = (e: React.FormEvent) => {
+    // --- REAL AI INTEGRATION LOGIC ---
+    const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!inputValue.trim()) return;
 
         const userMsg = inputValue.trim();
-        setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
+        // Add user message to UI immediately
+        const newMessages = [...messages, { role: 'user' as const, text: userMsg }];
+        setMessages(newMessages);
         setInputValue('');
         setIsTyping(true);
 
-        // Simulate AI thinking time
-        setTimeout(() => {
-            const aiResponse = generateAiResponse(userMsg);
-            setMessages(prev => [...prev, { role: 'ai', text: aiResponse }]);
+        try {
+            // Call the secure backend API
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    message: userMsg,
+                    history: messages, // Pass history so AI remembers the conversation
+                    agentName: agentName // Send the dynamic name to the backend
+                }),
+            });
+
+            if (!response.ok) throw new Error('Network response was not ok');
+            
+            const data = await response.json();
+            
+            // Add AI response to UI
+            setMessages(prev => [...prev, { role: 'ai', text: data.reply }]);
+        } catch (error) {
+            console.error("Chat error:", error);
+            setMessages(prev => [...prev, { role: 'ai', text: "I'm having a slight connection issue right now, but Gavblue's trading servers are fully operational! Please try asking again in a moment." }]);
+        } finally {
             setIsTyping(false);
-        }, 1500);
+        }
     };
 
     return (
@@ -147,11 +155,11 @@ const AiSupportChat = () => {
                 {/* Header */}
                 <div className="h-16 bg-[#111] border-b border-white/5 flex items-center px-4 justify-between flex-shrink-0">
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" /></svg>
+                        <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
+                            {agentName.charAt(0)}
                         </div>
                         <div>
-                            <h3 className="text-white font-bold text-sm">Gavblue AI Agent</h3>
+                            <h3 className="text-white font-bold text-sm">{agentName} - Gavblue Support</h3>
                             <p className="text-[10px] text-green-400 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block"></span> Online</p>
                         </div>
                     </div>
@@ -186,7 +194,7 @@ const AiSupportChat = () => {
                             type="text" 
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
-                            placeholder="Ask about Gavblue..."
+                            placeholder={`Reply to ${agentName}...`}
                             className="w-full bg-[#111] border border-white/10 text-white text-sm rounded-xl pl-4 pr-12 py-3 outline-none focus:border-blue-500 transition-colors"
                         />
                         <button 
@@ -333,7 +341,6 @@ export default function Home() {
   }, []);
 
   return (
-    // FIX: ADDED w-full max-w-[100vw] overflow-hidden here to strictly prevent mobile side gaps
     <div className="min-h-screen w-full max-w-[100vw] bg-[#050505] text-white font-sans selection:bg-blue-600 selection:text-white overflow-hidden relative cursor-default">
       
       {/* CSS FOR SEAMLESS MARQUEE & PAUSE */}
