@@ -117,10 +117,17 @@ export default function Dashboard() {
   const [toast, setToast] = useState<ToastMessage | null>(null);
 
   // --- KYC STATES ---
-  // Load initial status from localStorage if available
   const [kycStatus, setKycStatus] = useState<'unverified' | 'pending' | 'verified'>('unverified');
   const [kycStep, setKycStep] = useState(1);
   const [kycProcessing, setKycProcessing] = useState(false);
+  const [livenessInstruction, setLivenessInstruction] = useState('Position your face in the circle');
+  
+  // NEW: KYC Step 1 Form States
+  const [kycFirstName, setKycFirstName] = useState('');
+  const [kycLastName, setKycLastName] = useState('');
+  const [kycDob, setKycDob] = useState('');
+  const [kycAddress, setKycAddress] = useState('');
+
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const frontFileRef = useRef<HTMLInputElement>(null);
@@ -219,17 +226,17 @@ export default function Dashboard() {
 
   // --- DATA LOADING & PERSISTENCE ---
   useEffect(() => {
-    // Check Local Storage for KYC
-    const savedKyc = localStorage.getItem('kycStatus');
-    if (savedKyc === 'verified' || savedKyc === 'pending') {
-        setKycStatus(savedKyc as any);
-    }
-
     setOrigin(window.location.origin);
     async function getData() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push('/login'); return; }
       setUser(user);
+
+      // Check Local Storage for KYC linked SPECIFICALLY to this user to prevent asking again
+      const savedKyc = localStorage.getItem(`kycStatus_${user.id}`);
+      if (savedKyc === 'verified' || savedKyc === 'pending') {
+          setKycStatus(savedKyc as any);
+      }
 
       const { data: userProfile } = await supabase
         .from('profiles')
@@ -335,6 +342,23 @@ export default function Dashboard() {
   };
 
   // --- KYC FUNCTIONS ---
+  const handleKycStep1 = () => {
+      if (!kycFirstName.trim() || !kycLastName.trim() || !kycDob.trim() || !kycAddress.trim()) {
+          triggerToast("Please fill out all personal details.", "error");
+          return;
+      }
+      
+      // Enforce age and valid year
+      const dobYear = parseInt(kycDob.split('-')[0]);
+      const currentYear = new Date().getFullYear();
+      if (dobYear < 1920 || dobYear > currentYear - 18) {
+          triggerToast("Invalid Date of Birth. You must be at least 18 years old.", "error");
+          return;
+      }
+      
+      setKycStep(2);
+  };
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'front' | 'back') => {
       if (e.target.files && e.target.files[0]) {
           if (type === 'front') setFrontFile(e.target.files[0]);
@@ -361,11 +385,6 @@ export default function Dashboard() {
       }
   };
 
-  // Cleanup camera on unmount or step change
-  useEffect(() => {
-      return () => stopCamera();
-  }, []);
-
   const handleKYCSubmit = () => {
       stopCamera();
       setKycProcessing(true);
@@ -374,7 +393,7 @@ export default function Dashboard() {
       setTimeout(() => {
           setKycProcessing(false);
           setKycStatus('pending'); 
-          localStorage.setItem('kycStatus', 'pending'); // SAVE TO LOCAL STORAGE
+          if(user) localStorage.setItem(`kycStatus_${user.id}`, 'pending'); // SAVE PER USER
           setKycStep(4); 
           
           triggerToast("Documents submitted successfully!", "success");
@@ -382,11 +401,45 @@ export default function Dashboard() {
           // Simulate verification complete
           setTimeout(() => {
               setKycStatus('verified'); 
-              localStorage.setItem('kycStatus', 'verified'); // UPDATE PERSISTENCE
+              if(user) localStorage.setItem(`kycStatus_${user.id}`, 'verified'); // UPDATE PER USER
               triggerToast("Account Verified!", "success");
           }, 4000);
       }, 3000);
   };
+
+  // Face Check Sequence Trigger for Step 3
+  useEffect(() => {
+      let interval: NodeJS.Timeout;
+      if (kycStep === 3 && activePage === 'kyc') {
+          startCamera();
+          let stepCounter = 0;
+          const instructions = [
+              "Look Left ⬅️",
+              "Look Right ➡️",
+              "Smile! 😊",
+              "Perfect! Verifying..."
+          ];
+          
+          interval = setInterval(() => {
+              if (stepCounter < instructions.length) {
+                  setLivenessInstruction(instructions[stepCounter]);
+                  stepCounter++;
+              } else {
+                  clearInterval(interval);
+                  handleKYCSubmit(); // Auto submit after sequence
+              }
+          }, 2500); 
+      }
+      return () => {
+          if (interval) clearInterval(interval);
+          stopCamera();
+      };
+  }, [kycStep, activePage]);
+
+  // Cleanup camera on unmount or step change
+  useEffect(() => {
+      return () => stopCamera();
+  }, []);
 
   // --- NEW LOADING SCREEN ---
   if (loading) {
@@ -401,16 +454,35 @@ export default function Dashboard() {
            </div>
         </div>
         <div className="flex flex-col items-center space-y-2">
-            <span className="text-white text-lg font-bold tracking-widest uppercase">TradeCore</span>
+            <span className="text-white text-xl font-bold tracking-widest uppercase">gav<span className="text-blue-500">blue</span></span>
             <span className="text-blue-500 text-[10px] font-mono animate-pulse">INITIALIZING CONSOLE...</span>
         </div>
       </div>
     );
   }
 
+  // Calculate max date for 18 years old
+  const maxDate = new Date();
+  maxDate.setFullYear(maxDate.getFullYear() - 18);
+  const maxDateString = maxDate.toISOString().split('T')[0];
+
   return (
-    <div className="min-h-screen bg-[#F2F4F8] dark:bg-[#050505] text-[#1a1a1a] dark:text-white font-sans flex overflow-hidden">
+    // STRICT DARK MODE ENABLED
+    <div className="min-h-screen bg-[#050505] text-white font-sans flex overflow-hidden">
       
+      {/* Custom styles for cool calendar icon */}
+      <style dangerouslySetInnerHTML={{__html: `
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1) sepia(100%) saturate(10000%) hue-rotate(210deg);
+            cursor: pointer;
+            opacity: 0.8;
+            transition: 0.2s;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator:hover {
+            opacity: 1;
+        }
+      `}} />
+
       {/* TOAST */}
       {toast && (
           <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[200] animate-in slide-in-from-top-5 fade-in duration-300 w-[90%] md:w-auto">
@@ -452,10 +524,10 @@ export default function Dashboard() {
           </div>
       </div>
 
-      {/* 2. SIDEBAR MENU */}
-      <div className={`fixed top-0 left-0 h-full w-[280px] bg-[#0A0A0A] border-r border-white/5 shadow-2xl z-[70] transform transition-transform duration-300 ease-out flex flex-col md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      {/* 2. SIDEBAR MENU - ADDED flex-shrink-0 for proportional fix */}
+      <div className={`fixed top-0 left-0 h-full w-[280px] flex-shrink-0 bg-[#0A0A0A] border-r border-white/5 shadow-2xl z-[70] transform transition-transform duration-300 ease-out flex flex-col md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="h-16 flex items-center justify-between px-6 border-b border-white/5">
-           <span className="text-xl font-bold tracking-tighter cursor-pointer select-none" onClick={() => router.push('/')}>TRADE<span className="text-blue-500">CORE</span></span>
+           <span className="text-xl font-bold tracking-tighter cursor-pointer select-none uppercase text-white" onClick={() => router.push('/')}>gav<span className="text-blue-500">blue</span></span>
            <button onClick={() => setIsSidebarOpen(false)} className="md:hidden text-gray-500"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
         </div>
         
@@ -469,7 +541,7 @@ export default function Dashboard() {
                <div className={`space-y-1 overflow-hidden transition-all duration-300 ease-in-out ${openSections.trading ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
                    <div className="px-3">
                        <SidebarItem icon="users" label="Real Accounts" active={activePage === 'accounts'} onClick={() => handleNavClick('accounts')} />
-                       <SidebarItem icon="chart" label="Performance" active={activePage === 'perf2'} onClick={() => handleNavClick('perf')} />
+                       <SidebarItem icon="chart" label="Performance" active={activePage === 'perf'} onClick={() => handleNavClick('perf')} />
                        <SidebarItem icon="history" label="Trade History" active={activePage === 'history'} onClick={() => handleNavClick('history')} />
                    </div>
                </div>
@@ -577,7 +649,7 @@ export default function Dashboard() {
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${isPlatformDropdownOpen ? 'rotate-180' : ''}`}><path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
                         </button>
                         {isPlatformDropdownOpen && (
-                            <div className="absolute top-full left-0 w-full mt-2 bg-[#1A1A1A] border border-white/10 rounded-xl shadow-xl overflow-hidden z-50 max-h-48 md:max-h-60 overflow-y-auto scrollbar-hide">
+                            <div className="absolute top-full left-0 w-full mt-2 bg-[#1A1A1A] border border-white/10 rounded-xl shadow-xl overflow-hidden z-50 max-h-48 md:max-h-60 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
                                 {PLATFORMS.map(p => (
                                     <div key={p.id} onClick={() => { setSelectedPlatform(p); setIsPlatformDropdownOpen(false); }} className={`px-4 py-3 cursor-pointer transition flex items-center justify-between ${selectedPlatform.id === p.id ? 'bg-blue-600/10 border-l-2 border-blue-500' : 'hover:bg-white/5 border-l-2 border-transparent'}`}>
                                             <div className="flex flex-col"><span className={`text-sm font-bold ${selectedPlatform.id === p.id ? 'text-blue-400' : 'text-white'}`}>{p.name}</span><span className="text-[10px] text-gray-500">{p.desc}</span></div>
@@ -599,7 +671,7 @@ export default function Dashboard() {
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${isPaymentDropdownOpen ? 'rotate-180' : ''}`}><path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
                         </button>
                         {isPaymentDropdownOpen && (
-                            <div className="absolute top-full left-0 w-full mt-2 bg-[#1A1A1A] border border-white/10 rounded-xl shadow-xl overflow-hidden z-50 max-h-48 md:max-h-60 overflow-y-auto scrollbar-hide">
+                            <div className="absolute top-full left-0 w-full mt-2 bg-[#1A1A1A] border border-white/10 rounded-xl shadow-xl overflow-hidden z-50 max-h-48 md:max-h-60 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
                                 {PAYMENT_METHODS.filter(m => m.type === 'crypto').map(m => (
                                     <div key={m.id} onClick={() => { setSelectedDepositMethod(m); setIsPaymentDropdownOpen(false); }} className={`px-4 py-3 cursor-pointer transition flex items-center justify-between ${selectedDepositMethod?.id === m.id ? 'bg-blue-600/10 border-l-2 border-blue-500' : 'hover:bg-white/5 border-l-2 border-transparent'}`}>
                                          <div className="flex items-center gap-3">
@@ -632,31 +704,31 @@ export default function Dashboard() {
       )}
 
       {/* =======================
-          MAIN CONTENT AREA
+          MAIN CONTENT AREA - ADDED min-w-0 for proportional layout fix
          ======================= */}
-      <main className="flex-1 flex flex-col relative h-screen overflow-hidden w-full">
+      <main className="flex-1 flex flex-col relative h-screen overflow-hidden min-w-0">
         
         {/* HEADER */}
-        <header className="h-16 border-b border-gray-200 dark:border-white/5 bg-white dark:bg-[#0A0A0A] flex items-center justify-between px-4 md:px-6 z-30 flex-shrink-0">
+        <header className="h-16 border-b border-white/5 bg-[#0A0A0A] flex items-center justify-between px-4 md:px-6 z-30 flex-shrink-0">
             {/* MENU BUTTON */}
             <div className="flex items-center gap-3 md:gap-4">
                 <button onClick={() => setIsSidebarOpen(true)} className="md:hidden text-gray-400 hover:text-white transition">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
                 </button>
                 {/* DYNAMIC TITLE */}
-                <h1 className="text-base md:text-lg font-bold capitalize">
+                <h1 className="text-base md:text-lg font-bold capitalize text-white truncate">
                     {activePage === 'history' ? 'Trade History' : activePage === 'trans' ? 'Transactions' : activePage === 'kyc' ? 'Verification' : activePage.replace('-', ' ')}
                 </h1>
             </div>
 
             <div className="flex items-center gap-3 md:gap-5">
                 <button onClick={() => setShowBonusModal(true)} className="hidden md:flex items-center gap-2 px-4 py-1.5 bg-[#FFE600] hover:bg-[#E5CE00] text-black text-xs font-bold rounded-full transition shadow-lg shadow-yellow-500/20 animate-pulse"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3"><path fillRule="evenodd" d="M12.97 3.97a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 1 1-1.06-1.06l6.22-6.22H3a.75.75 0 0 1 0-1.5h16.19l-6.22-6.22a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" /></svg> Claim Bonus</button>
-                <div className="hidden sm:flex items-center gap-3 bg-gray-100 dark:bg-white/5 px-3 py-1.5 rounded-full border border-gray-200 dark:border-white/5">
+                <div className="hidden sm:flex items-center gap-3 bg-white/5 px-3 py-1.5 rounded-full border border-white/5">
                     <span className="text-[10px] text-gray-500 font-bold uppercase hidden md:inline-block">Total Equity</span>
                     <span className="text-xs md:text-sm font-bold font-mono text-green-400">$ {totalEquity.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                 </div>
-                <div className="w-px h-6 bg-gray-200 dark:bg-white/10 hidden sm:block"></div>
-                <button onClick={() => setIsNotifOpen(true)} className="text-gray-500 hover:text-black dark:hover:text-white transition relative"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" /></svg><span className="absolute top-0 right-0 w-2.5 h-2.5 bg-blue-500 rounded-full border-2 border-white dark:border-[#0A0A0A]"></span></button>
+                <div className="w-px h-6 bg-white/10 hidden sm:block"></div>
+                <button onClick={() => setIsNotifOpen(true)} className="text-gray-500 hover:text-white transition relative"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" /></svg><span className="absolute top-0 right-0 w-2.5 h-2.5 bg-blue-500 rounded-full border-2 border-[#0A0A0A]"></span></button>
                 <div onClick={() => setIsProfileOpen(!isProfileOpen)} className="h-8 w-8 md:h-9 md:w-9 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold cursor-pointer hover:shadow-lg hover:shadow-blue-500/30 transition select-none">{user?.email?.charAt(0).toUpperCase()}</div>
             </div>
         </header>
@@ -684,7 +756,7 @@ export default function Dashboard() {
                             </div>
                         </div>
                     </div>
-                    {/* ... (rest of profile content) ... */}
+                    
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                         <div className="bg-[#111] border border-white/5 rounded-2xl p-5 md:p-6">
                             <h3 className="text-base md:text-lg font-bold text-white mb-4">Account Information</h3>
@@ -711,7 +783,7 @@ export default function Dashboard() {
                </div>
             )}
 
-            {/* --- KYC PAGE (NEW) --- */}
+            {/* --- KYC PAGE (UPDATED WITH PERSISTENCE & CIRCLE CAMERA) --- */}
             {activePage === 'kyc' && (
                 <div className="max-w-3xl mx-auto animate-in fade-in zoom-in-95 duration-300">
                     <div className="mb-6 md:mb-8 text-center md:text-left">
@@ -719,142 +791,150 @@ export default function Dashboard() {
                         <p className="text-gray-400 text-xs md:text-sm">Complete KYC to unlock full trading limits and withdrawals.</p>
                     </div>
 
-                    {/* Steps Indicator */}
-                    <div className="flex items-center justify-between mb-8 md:mb-10 px-2 md:px-4">
-                        {[1, 2, 3].map((step) => (
-                            <div key={step} className="flex flex-col items-center gap-2 relative z-10">
-                                <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-xs md:text-sm border-2 transition-all duration-500 ${kycStep >= step ? 'bg-blue-600 border-blue-600 text-white' : 'bg-[#111] border-white/10 text-gray-500'}`}>
-                                    {kycStep > step ? '✓' : step}
-                                    </div>
-                                <span className={`text-[10px] md:text-xs font-bold mt-1 md:mt-0 ${kycStep >= step ? 'text-blue-500' : 'text-gray-600'}`}>{step === 1 ? 'Personal Info' : step === 2 ? 'ID Upload' : 'Face Check'}</span>
+                    {/* ONLY show steps if they are unverified. If verified/pending, lock it here. */}
+                    {kycStatus === 'verified' || kycStatus === 'pending' ? (
+                        <div className="bg-[#111] border border-white/10 rounded-2xl p-8 text-center shadow-2xl">
+                            <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-6 ${kycStatus === 'verified' ? 'bg-green-500/10 text-green-500' : 'bg-yellow-500/10 text-yellow-500'}`}>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-10 h-10"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
                             </div>
-                        ))}
-                        {/* Connecting Line */}
-                        <div className="absolute top-[165px] left-0 right-0 h-0.5 bg-white/5 -z-0 max-w-2xl mx-auto hidden md:block"></div>
-                        <div className="absolute top-[165px] left-0 h-0.5 bg-blue-600/50 -z-0 max-w-2xl mx-auto transition-all duration-500 hidden md:block" style={{ width: `${((kycStep - 1) / 2) * 100}%` }}></div>
-                    </div>
-
-                    <div className="bg-[#111] border border-white/10 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden min-h-[400px]">
-                        {kycProcessing && (
-                            <div className="absolute inset-0 bg-black/90 backdrop-blur-md z-50 flex flex-col items-center justify-center animate-in fade-in duration-300 p-4 text-center">
-                                 <div className="relative w-20 h-20 md:w-24 md:h-24 mb-6">
-                                    <div className="absolute inset-0 border-4 border-blue-500/30 rounded-full"></div>
-                                    <div className="absolute inset-0 border-4 border-t-blue-500 rounded-full animate-spin"></div>
-                                    <div className="absolute inset-0 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-8 h-8 md:w-10 md:h-10 text-blue-500 animate-pulse"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg></div>
-                                 </div>
-                                 <h3 className="text-lg md:text-xl text-white font-bold mb-2">Processing Documents</h3>
-                                 <p className="text-gray-500 text-xs md:text-sm animate-pulse">Verifying your identity...</p>
-                            </div>
-                        )}
-
-                        {/* Step 1: Personal Info */}
-                        {kycStep === 1 && (
-                            <div className="space-y-4 md:space-y-6">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                                    <div><label className="block text-[10px] md:text-xs text-gray-500 font-bold uppercase mb-2">First Name</label><input type="text" className="w-full bg-[#050505] border border-white/10 rounded-xl px-4 py-3.5 text-white text-sm focus:border-blue-500 outline-none transition" placeholder="John" /></div>
-                                    <div><label className="block text-[10px] md:text-xs text-gray-500 font-bold uppercase mb-2">Last Name</label><input type="text" className="w-full bg-[#050505] border border-white/10 rounded-xl px-4 py-3.5 text-white text-sm focus:border-blue-500 outline-none transition" placeholder="Doe" /></div>
-                                </div>
-                                <div><label className="block text-[10px] md:text-xs text-gray-500 font-bold uppercase mb-2">Date of Birth</label><input type="date" className="w-full bg-[#050505] border border-white/10 rounded-xl px-4 py-3.5 text-white text-sm focus:border-blue-500 outline-none transition" /></div>
-                                <div><label className="block text-[10px] md:text-xs text-gray-500 font-bold uppercase mb-2">Full Address</label><input type="text" className="w-full bg-[#050505] border border-white/10 rounded-xl px-4 py-3.5 text-white text-sm focus:border-blue-500 outline-none transition" placeholder="123 Trading St, New York, NY" /></div>
-                                <button onClick={() => setKycStep(2)} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl mt-2 md:mt-4 transition shadow-lg shadow-blue-500/20 text-sm md:text-base">Continue &rarr;</button>
-                            </div>
-                        )}
-
-                        {/* Step 2: Documents (REAL FILE INPUTS) */}
-                        {kycStep === 2 && (
-                            <div className="space-y-6">
-                                <p className="text-xs md:text-sm text-gray-400 mb-4 text-center md:text-left">Please upload a clear photo of your Government ID (Passport, Driver's License, or ID Card).</p>
-                                {/* Hidden Inputs */}
-                                <input type="file" ref={frontFileRef} onChange={(e) => handleFileSelect(e, 'front')} className="hidden" accept="image/*" />
-                                <input type="file" ref={backFileRef} onChange={(e) => handleFileSelect(e, 'back')} className="hidden" accept="image/*" />
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-                                    {/* Front ID */}
-                                    <div 
-                                        onClick={() => frontFileRef.current?.click()}
-                                        className={`border-2 border-dashed ${frontFile ? 'border-green-500/50 bg-green-500/5' : 'border-white/10 hover:border-blue-500/50 hover:bg-white/5'} rounded-xl p-6 flex flex-col items-center justify-center text-center transition cursor-pointer h-32 md:h-40 group`}
-                                    >
-                                        {frontFile ? (
-                                             <>
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 md:w-8 md:h-8 text-green-500 mb-2"><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
-                                                <span className="text-[10px] md:text-xs font-bold text-green-500 break-all px-2 line-clamp-2">{frontFile.name}</span>
-                                             </>
-                                        ) : (
-                                            <>
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 md:w-8 md:h-8 text-gray-500 group-hover:text-blue-500 mb-2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" /></svg>
-                                                <span className="text-[10px] md:text-xs font-bold text-gray-400 group-hover:text-white">Upload Front ID</span>
-                                            </>
-                                        )}
-                                    </div>
-
-                                    {/* Back ID */}
-                                    <div 
-                                        onClick={() => backFileRef.current?.click()}
-                                        className={`border-2 border-dashed ${backFile ? 'border-green-500/50 bg-green-500/5' : 'border-white/10 hover:border-blue-500/50 hover:bg-white/5'} rounded-xl p-6 flex flex-col items-center justify-center text-center transition cursor-pointer h-32 md:h-40 group`}
-                                    >
-                                        {backFile ? (
-                                             <>
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 md:w-8 md:h-8 text-green-500 mb-2"><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
-                                                <span className="text-[10px] md:text-xs font-bold text-green-500 break-all px-2 line-clamp-2">{backFile.name}</span>
-                                             </>
-                                        ) : (
-                                            <>
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 md:w-8 md:h-8 text-gray-500 group-hover:text-blue-500 mb-2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" /></svg>
-                                                <span className="text-[10px] md:text-xs font-bold text-gray-400 group-hover:text-white">Upload Back ID</span>
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
-                                <button onClick={() => setKycStep(3)} disabled={!frontFile || !backFile} className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl mt-4 transition text-sm md:text-base">Next Step &rarr;</button>
-                            </div>
-                        )}
-
-                        {/* Step 3: Face Check (REAL CAMERA) */}
-                        {kycStep === 3 && (
-                            <div className="text-center space-y-6">
-                                <div className="w-full max-w-[250px] md:max-w-sm mx-auto aspect-square bg-black rounded-full border-4 border-white/10 relative overflow-hidden flex items-center justify-center group">
-                                    {videoStream ? (
-                                        <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover transform scale-x-[-1]" />
-                                    ) : (
-                                        <div className="flex flex-col items-center">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-16 h-16 md:w-20 md:h-20 text-gray-600 mb-2"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
-                                            <p className="text-gray-500 text-[10px] md:text-xs">Camera is off</p>
+                            <h3 className="text-2xl font-bold text-white mb-2">{kycStatus === 'verified' ? 'Verification Complete' : 'Verification Under Review'}</h3>
+                            <p className="text-gray-400">{kycStatus === 'verified' ? 'Thank you. Your account is fully verified and you can now access all features.' : 'Your documents are currently being reviewed by our team. You will receive an email once complete.'}</p>
+                        </div>
+                    ) : (
+                        <>
+                            {/* Steps Indicator */}
+                            <div className="flex items-center justify-between mb-8 md:mb-10 px-2 md:px-4">
+                                {[1, 2, 3].map((step) => (
+                                    <div key={step} className="flex flex-col items-center gap-2 relative z-10">
+                                        <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-xs md:text-sm border-2 transition-all duration-500 ${kycStep >= step ? 'bg-blue-600 border-blue-600 text-white' : 'bg-[#111] border-white/10 text-gray-500'}`}>
+                                            {kycStep > step ? '✓' : step}
                                         </div>
-                                    )}
-                                    <div className="absolute inset-0 border-[15px] md:border-[20px] border-black/30 rounded-full pointer-events-none"></div>
-                                    {videoStream && <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-500/10 to-transparent animate-scan pointer-events-none"></div>}
-                                </div>
-                                <p className="text-gray-400 text-xs md:text-sm px-4">Please position your face within the circle for a liveness check.</p>
-                                
-                                {!videoStream ? (
-                                    <button onClick={startCamera} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl mt-4 transition flex items-center justify-center gap-2 text-sm md:text-base">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 md:w-5 md:h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" /></svg>
-                                        Enable Camera
-                                    </button>
-                                ) : (
-                                    <button onClick={handleKYCSubmit} className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3.5 rounded-xl mt-4 transition shadow-lg shadow-green-500/20 text-sm md:text-base">
-                                        Capture & Verify
-                                    </button>
+                                        <span className={`text-[10px] md:text-xs font-bold mt-1 md:mt-0 ${kycStep >= step ? 'text-blue-500' : 'text-gray-600'}`}>{step === 1 ? 'Personal Info' : step === 2 ? 'ID Upload' : 'Face Check'}</span>
+                                    </div>
+                                ))}
+                                {/* Connecting Line */}
+                                <div className="absolute top-[165px] left-0 right-0 h-0.5 bg-white/5 -z-0 max-w-2xl mx-auto hidden md:block"></div>
+                                <div className="absolute top-[165px] left-0 h-0.5 bg-blue-600/50 -z-0 max-w-2xl mx-auto transition-all duration-500 hidden md:block" style={{ width: `${((kycStep - 1) / 2) * 100}%` }}></div>
+                            </div>
+
+                            <div className="bg-[#111] border border-white/10 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden min-h-[400px]">
+                                {kycProcessing && (
+                                    <div className="absolute inset-0 bg-black/90 backdrop-blur-md z-50 flex flex-col items-center justify-center animate-in fade-in duration-300 p-4 text-center">
+                                         <div className="relative w-20 h-20 md:w-24 md:h-24 mb-6">
+                                            <div className="absolute inset-0 border-4 border-blue-500/30 rounded-full"></div>
+                                            <div className="absolute inset-0 border-4 border-t-blue-500 rounded-full animate-spin"></div>
+                                            <div className="absolute inset-0 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-8 h-8 md:w-10 md:h-10 text-blue-500 animate-pulse"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg></div>
+                                         </div>
+                                         <h3 className="text-lg md:text-xl text-white font-bold mb-2">Processing Documents</h3>
+                                         <p className="text-gray-500 text-xs md:text-sm animate-pulse">Verifying your identity...</p>
+                                    </div>
+                                )}
+
+                                {/* Step 1: Personal Info */}
+                                {kycStep === 1 && (
+                                    <div className="space-y-4 md:space-y-6">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                                            <div>
+                                                <label className="block text-[10px] md:text-xs text-gray-500 font-bold uppercase mb-2">First Name</label>
+                                                <input type="text" value={kycFirstName} onChange={(e) => setKycFirstName(e.target.value)} className="w-full bg-[#050505] border border-white/10 rounded-xl px-4 py-3.5 text-white text-sm focus:border-blue-500 outline-none transition" placeholder="John" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] md:text-xs text-gray-500 font-bold uppercase mb-2">Last Name</label>
+                                                <input type="text" value={kycLastName} onChange={(e) => setKycLastName(e.target.value)} className="w-full bg-[#050505] border border-white/10 rounded-xl px-4 py-3.5 text-white text-sm focus:border-blue-500 outline-none transition" placeholder="Doe" />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] md:text-xs text-gray-500 font-bold uppercase mb-2">Date of Birth</label>
+                                            {/* Applied strict minimum and maximum dates here */}
+                                            <input type="date" value={kycDob} min="1920-01-01" max={maxDateString} onChange={(e) => setKycDob(e.target.value)} className="w-full bg-[#050505] border border-white/10 rounded-xl px-4 py-3.5 text-white text-sm focus:border-blue-500 outline-none transition [color-scheme:dark]" />
+                                            <p className="text-[10px] text-gray-500 mt-1 text-right">Must be at least 18 years old.</p>
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] md:text-xs text-gray-500 font-bold uppercase mb-2">Full Address</label>
+                                            <input type="text" value={kycAddress} onChange={(e) => setKycAddress(e.target.value)} className="w-full bg-[#050505] border border-white/10 rounded-xl px-4 py-3.5 text-white text-sm focus:border-blue-500 outline-none transition" placeholder="123 Trading St, New York, NY" />
+                                        </div>
+                                        <button onClick={handleKycStep1} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl mt-2 md:mt-4 transition shadow-lg shadow-blue-500/20 text-sm md:text-base">Continue &rarr;</button>
+                                    </div>
+                                )}
+
+                                {/* Step 2: Documents */}
+                                {kycStep === 2 && (
+                                    <div className="space-y-6">
+                                        <p className="text-xs md:text-sm text-gray-400 mb-4 text-center md:text-left">Please upload a clear photo of your Government ID (Passport, Driver's License, or ID Card).</p>
+                                        {/* Hidden Inputs */}
+                                        <input type="file" ref={frontFileRef} onChange={(e) => handleFileSelect(e, 'front')} className="hidden" accept="image/*" />
+                                        <input type="file" ref={backFileRef} onChange={(e) => handleFileSelect(e, 'back')} className="hidden" accept="image/*" />
+
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+                                            <div onClick={() => frontFileRef.current?.click()} className={`border-2 border-dashed ${frontFile ? 'border-green-500/50 bg-green-500/5' : 'border-white/10 hover:border-blue-500/50 hover:bg-white/5'} rounded-xl p-6 flex flex-col items-center justify-center text-center transition cursor-pointer h-32 md:h-40 group`}>
+                                                {frontFile ? (
+                                                     <>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 md:w-8 md:h-8 text-green-500 mb-2"><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                                                        <span className="text-[10px] md:text-xs font-bold text-green-500 break-all px-2 line-clamp-2">{frontFile.name}</span>
+                                                     </>
+                                                ) : (
+                                                    <>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 md:w-8 md:h-8 text-gray-500 group-hover:text-blue-500 mb-2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" /></svg>
+                                                        <span className="text-[10px] md:text-xs font-bold text-gray-400 group-hover:text-white">Upload Front ID</span>
+                                                    </>
+                                                )}
+                                            </div>
+                                            <div onClick={() => backFileRef.current?.click()} className={`border-2 border-dashed ${backFile ? 'border-green-500/50 bg-green-500/5' : 'border-white/10 hover:border-blue-500/50 hover:bg-white/5'} rounded-xl p-6 flex flex-col items-center justify-center text-center transition cursor-pointer h-32 md:h-40 group`}>
+                                                {backFile ? (
+                                                     <>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 md:w-8 md:h-8 text-green-500 mb-2"><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                                                        <span className="text-[10px] md:text-xs font-bold text-green-500 break-all px-2 line-clamp-2">{backFile.name}</span>
+                                                     </>
+                                                ) : (
+                                                    <>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 md:w-8 md:h-8 text-gray-500 group-hover:text-blue-500 mb-2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" /></svg>
+                                                        <span className="text-[10px] md:text-xs font-bold text-gray-400 group-hover:text-white">Upload Back ID</span>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <button onClick={() => setKycStep(3)} disabled={!frontFile || !backFile} className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl mt-4 transition text-sm md:text-base">Next Step &rarr;</button>
+                                    </div>
+                                )}
+
+                                {/* Step 3: Face Check (Circular Scan Effect) */}
+                                {kycStep === 3 && (
+                                    <div className="flex flex-col items-center justify-center py-4">
+                                        <h3 className="text-lg md:text-xl text-white font-bold mb-6 text-center animate-pulse">{livenessInstruction}</h3>
+                                        
+                                        {/* Circular Camera Frame with Scanning effect */}
+                                        <div className="relative w-56 h-56 md:w-64 md:h-64 rounded-full overflow-hidden border-4 border-blue-500 shadow-[0_0_30px_rgba(59,130,246,0.5)] mb-6 bg-black flex items-center justify-center group">
+                                            {videoStream ? (
+                                                <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover transform scale-x-[-1]" />
+                                            ) : (
+                                                <div className="flex flex-col items-center">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-16 h-16 md:w-20 md:h-20 text-gray-600 mb-2"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
+                                                    <p className="text-gray-500 text-[10px] md:text-xs">Camera is off</p>
+                                                </div>
+                                            )}
+                                            {/* Inner frame mask to make it look even more like a circular scanner */}
+                                            <div className="absolute inset-0 border-[15px] border-black/40 rounded-full pointer-events-none"></div>
+                                            {videoStream && <div className="absolute inset-0 border-t-4 border-white/50 rounded-full animate-spin pointer-events-none"></div>}
+                                            {videoStream && <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-500/20 to-transparent opacity-50 animate-pulse pointer-events-none"></div>}
+                                        </div>
+                                        
+                                        <p className="text-gray-400 text-xs text-center max-w-sm">Please ensure your face is well-lit and clearly visible within the circle.</p>
+                                        
+                                        {!videoStream && (
+                                            <button onClick={startCamera} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl mt-4 transition flex items-center justify-center gap-2 text-sm md:text-base">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 md:w-5 md:h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" /></svg>
+                                                Enable Camera
+                                            </button>
+                                        )}
+                                    </div>
                                 )}
                             </div>
-                        )}
-
-                        {/* Step 4: Success */}
-                        {kycStep === 4 && (
-                            <div className="text-center py-6 md:py-10 animate-in zoom-in-95 duration-500">
-                                <div className="w-16 h-16 md:w-20 md:h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6 text-green-500 shadow-[0_0_30px_rgba(34,197,94,0.3)]">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-8 h-8 md:w-10 md:h-10"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
-                                </div>
-                                <h3 className="text-xl md:text-2xl font-bold text-white mb-2">Documents Submitted!</h3>
-                                <p className="text-gray-400 text-xs md:text-sm px-4">Your account is now being verified. You will be notified once approved.</p>
-                                <button onClick={() => setActivePage('accounts')} className="mt-6 md:mt-8 text-blue-500 hover:text-white font-bold text-sm">Back to Dashboard</button>
-                            </div>
-                        )}
-                    </div>
+                        </>
+                    )}
                 </div>
             )}
 
-            {/* --- 2. REFERRALS VIEW (Existing) --- */}
+            {/* --- 2. REFERRALS VIEW --- */}
             {activePage === 'referrals' && (
                 <div className="max-w-5xl mx-auto space-y-6 md:space-y-8 animate-in fade-in zoom-in-95 duration-300">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
@@ -862,7 +942,7 @@ export default function Dashboard() {
                         <div className="text-left md:text-right w-full md:w-auto mt-2 md:mt-0"><p className="text-[10px] md:text-xs text-gray-500 font-bold uppercase mb-1">Total Referrals</p><p className="text-2xl md:text-3xl font-mono font-bold text-white">{referralCount}</p></div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                        <div className="bg-white dark:bg-[#151515] border border-gray-200 dark:border-white/5 p-5 md:p-6 rounded-2xl">
+                        <div className="bg-[#111] border border-white/5 p-5 md:p-6 rounded-2xl">
                             <h3 className="text-xs md:text-sm font-bold text-gray-300 mb-4 flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-blue-500"><path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" /></svg> Your Referral Link</h3>
                             <div className="flex flex-col sm:flex-row gap-2">
                                 <input readOnly value={referralLink} className="w-full flex-1 bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-xs md:text-sm text-gray-400 font-mono outline-none truncate" />
@@ -872,7 +952,7 @@ export default function Dashboard() {
                             </div>
                             <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg flex items-center gap-3"><div className="text-blue-400 text-xs font-bold bg-blue-500/20 px-2 py-1 rounded">{displayCode}</div><span className="text-[10px] md:text-xs text-blue-400">Share this code manually</span></div>
                         </div>
-                        <div className="bg-white dark:bg-[#151515] border border-gray-200 dark:border-white/5 p-5 md:p-6 rounded-2xl relative overflow-hidden">
+                        <div className="bg-[#111] border border-white/5 p-5 md:p-6 rounded-2xl relative overflow-hidden">
                             <h3 className="text-xs md:text-sm font-bold text-gray-300 mb-2">Bonus Progress</h3>
                             <div className="flex justify-between items-end mb-2"><span className="text-2xl md:text-3xl font-bold text-white">{Math.round(bonusProgress)}%</span><span className="text-[10px] md:text-xs text-gray-500">{referralCount} / {bonusTarget} Friends</span></div>
                             <div className="w-full bg-gray-800 rounded-full h-2 mb-3 md:mb-4"><div className="bg-yellow-500 h-2 rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(234,179,8,0.5)]" style={{ width: `${bonusProgress}%` }}></div></div>
@@ -880,7 +960,7 @@ export default function Dashboard() {
                         </div>
                     </div>
                     {/* Graph */}
-                    <div className="bg-white dark:bg-[#151515] border border-gray-200 dark:border-white/5 rounded-2xl p-4 md:p-6 overflow-hidden">
+                    <div className="bg-[#111] border border-white/5 rounded-2xl p-4 md:p-6 overflow-hidden">
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                             <h3 className="text-base md:text-lg font-bold text-white">Total Network Growth</h3>
                             <div className="flex bg-black/30 p-1 rounded-lg border border-white/10 w-full sm:w-auto overflow-x-auto scrollbar-hide">
@@ -896,8 +976,8 @@ export default function Dashboard() {
                                 return (
                                     <div key={i} className="flex-1 flex flex-col items-center justify-end h-full group relative">
                                             <div className={`w-full rounded-t-sm transition-all duration-700 relative ${isToday ? 'bg-blue-500' : 'bg-blue-600/30 group-hover:bg-blue-500/80'}`} style={{ height: `${height}%` }}>
-                                                <div className="opacity-0 group-hover:opacity-100 absolute -top-10 md:-top-12 left-1/2 -translate-x-1/2 bg-[#111] border border-white/20 text-white text-[10px] md:text-xs font-bold px-2 py-1.5 md:px-3 md:py-2 rounded-lg shadow-xl transition-all duration-200 pointer-events-none z-10 whitespace-nowrap flex flex-col items-center">
-                                                    <span className="text-[9px] md:text-[10px] text-gray-400 font-normal mb-0.5">{processedGraphData.labels[i]}</span><span>{val} Users</span><div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-[#111] border-r border-b border-white/20 rotate-45"></div>
+                                                <div className="opacity-0 group-hover:opacity-100 absolute -top-10 md:-top-12 left-1/2 -translate-x-1/2 bg-[#1A1A1A] border border-white/20 text-white text-[10px] md:text-xs font-bold px-2 py-1.5 md:px-3 md:py-2 rounded-lg shadow-xl transition-all duration-200 pointer-events-none z-10 whitespace-nowrap flex flex-col items-center">
+                                                    <span className="text-[9px] md:text-[10px] text-gray-400 font-normal mb-0.5">{processedGraphData.labels[i]}</span><span>{val} Users</span><div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-[#1A1A1A] border-r border-b border-white/20 rotate-45"></div>
                                                 </div>
                                             </div>
                                     </div>
@@ -911,7 +991,7 @@ export default function Dashboard() {
                 </div>
             )}
             
-            {/* ... [BONUSES] ... */}
+            {/* --- 3. BONUSES VIEW --- */}
             {activePage === 'bonuses' && (
                 <div className="max-w-6xl mx-auto space-y-6 md:space-y-8 animate-in fade-in zoom-in-95 duration-300">
                     <div className="text-center md:text-left">
@@ -951,6 +1031,7 @@ export default function Dashboard() {
                 </div>
             )}
 
+            {/* --- 4. DEPOSIT VIEW --- */}
             {activePage === 'deposit' && (
                 <div className="max-w-6xl mx-auto space-y-6 md:space-y-8 animate-in fade-in zoom-in-95 duration-300">
                     {!selectedDepositMethod ? (
@@ -964,12 +1045,12 @@ export default function Dashboard() {
                                    <div 
                                        key={method.id} 
                                        onClick={() => method.status !== 'soon' && setSelectedDepositMethod(method)}
-                                       className={`bg-white dark:bg-[#151515] border border-gray-200 dark:border-white/5 p-4 md:p-6 rounded-2xl transition group flex items-start gap-4 ${method.status === 'soon' ? 'opacity-50 cursor-not-allowed' : 'hover:border-blue-500/50 hover:bg-[#1A1A1A] cursor-pointer'}`}
+                                       className={`bg-[#111] border border-white/5 p-4 md:p-6 rounded-2xl transition group flex items-start gap-4 ${method.status === 'soon' ? 'opacity-50 cursor-not-allowed' : 'hover:border-blue-500/50 hover:bg-[#1A1A1A] cursor-pointer'}`}
                                    >
                                        <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-lg md:text-xl font-bold ${method.bg} ${method.color} flex-shrink-0`}>{method.icon}</div>
                                        <div className="flex-1">
                                             <div className="flex justify-between items-center mb-1">
-                                                 <h4 className="text-xs md:text-sm font-bold text-gray-900 dark:text-white group-hover:text-blue-400 transition">{method.name}</h4>
+                                                 <h4 className="text-xs md:text-sm font-bold text-white group-hover:text-blue-400 transition">{method.name}</h4>
                                                  {method.status === 'soon' && <span className="text-[8px] md:text-[9px] bg-white/10 px-1.5 md:px-2 py-0.5 rounded text-gray-400 ml-2">SOON</span>}
                                             </div>
                                             <div className="flex gap-2 md:gap-3 text-[9px] md:text-[10px] text-gray-500 flex-wrap mt-1">
@@ -997,7 +1078,6 @@ export default function Dashboard() {
                                 {/* LEFT: MAIN DEPOSIT AREA */}
                                 <div className="lg:col-span-2 space-y-6 md:space-y-8">
                                     
-                                    {/* UPDATED: Dynamic Crypto Selector Dropdown for Inline Page */}
                                     <div className="relative">
                                         <p className="text-[10px] md:text-xs text-gray-500 font-bold uppercase mb-2">Payment method</p>
                                         <button onClick={() => setIsPaymentDropdownOpen(!isPaymentDropdownOpen)} className="w-full bg-[#1A1A1A] text-white px-4 py-3.5 rounded-xl border border-white/10 flex items-center justify-between hover:bg-[#222] transition group">
@@ -1008,7 +1088,7 @@ export default function Dashboard() {
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isPaymentDropdownOpen ? 'rotate-180' : ''}`}><path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
                                         </button>
                                         {isPaymentDropdownOpen && (
-                                            <div className="absolute top-full left-0 w-full mt-2 bg-[#1A1A1A] border border-white/10 rounded-xl shadow-xl overflow-hidden z-50 max-h-48 md:max-h-60 overflow-y-auto scrollbar-hide">
+                                            <div className="absolute top-full left-0 w-full mt-2 bg-[#1A1A1A] border border-white/10 rounded-xl shadow-xl overflow-hidden z-50 max-h-48 md:max-h-60 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
                                                 {PAYMENT_METHODS.filter(m => m.type === 'crypto').map(m => (
                                                     <div key={m.id} onClick={() => { setSelectedDepositMethod(m); setIsPaymentDropdownOpen(false); }} className={`px-4 py-3 cursor-pointer transition flex items-center justify-between ${selectedDepositMethod?.id === m.id ? 'bg-blue-600/10 border-l-2 border-blue-500' : 'hover:bg-white/5 border-l-2 border-transparent'}`}>
                                                          <div className="flex items-center gap-3">
@@ -1056,7 +1136,7 @@ export default function Dashboard() {
                                         </div>
                                     </div>
                                     
-                                    <div className="pt-6 md:pt-8 mt-6 md:mt-8 border-t border-gray-200 dark:border-white/5">
+                                    <div className="pt-6 md:pt-8 mt-6 md:mt-8 border-t border-white/5">
                                         <p className="text-[10px] md:text-xs text-gray-500 text-center sm:text-left">All crypto wallet services are provided by gavblue Ltd, a company incorporated in Seychelles.</p>
                                     </div>
                                 </div>
@@ -1094,6 +1174,7 @@ export default function Dashboard() {
                 </div>
             )}
 
+            {/* --- 5. WITHDRAW VIEW --- */}
             {activePage === 'withdraw' && (
                  <div className="max-w-4xl mx-auto space-y-6 md:space-y-8 animate-in fade-in zoom-in-95 duration-300">
                     <div className="text-center md:text-left">
@@ -1122,7 +1203,7 @@ export default function Dashboard() {
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${isWithdrawDropdownOpen ? 'rotate-180' : ''}`}><path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
                                 </button>
                                 {isWithdrawDropdownOpen && (
-                                    <div className="absolute top-full left-0 w-full mt-2 bg-[#1A1A1A] border border-white/10 rounded-xl shadow-xl overflow-hidden z-50 max-h-48 md:max-h-60 overflow-y-auto scrollbar-hide">
+                                    <div className="absolute top-full left-0 w-full mt-2 bg-[#1A1A1A] border border-white/10 rounded-xl shadow-xl overflow-hidden z-50 max-h-48 md:max-h-60 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
                                             {PAYMENT_METHODS.map(m => (
                                                 <div 
                                                     key={m.id} 
@@ -1192,6 +1273,7 @@ export default function Dashboard() {
                  </div>
             )}
 
+            {/* --- 6. ACCOUNTS VIEW --- */}
             {activePage === 'accounts' && (
                 <div className="max-w-6xl mx-auto space-y-6 md:space-y-8 animate-in fade-in zoom-in-95 duration-300">
                     <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -1199,13 +1281,12 @@ export default function Dashboard() {
                         <button onClick={() => setShowDepositModal(true)} className="w-full sm:w-auto px-6 py-3 md:py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-lg shadow-lg shadow-blue-500/20 transition flex items-center justify-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg> Open New Account</button>
                     </div>
                     {accounts.length === 0 ? (
-                        // UPDATED "NO ACCOUNTS" STATE TO MATCH SCREENSHOT
-                        <div className="bg-black/40 border border-white/5 rounded-2xl p-6 md:p-12 h-[280px] md:h-[350px] flex flex-col items-center justify-center text-center px-4">
+                        <div className="bg-[#111] border border-white/5 rounded-2xl p-6 md:p-12 h-[280px] md:h-[350px] flex flex-col items-center justify-center text-center px-4">
                             <div className="w-12 h-12 md:w-16 md:h-16 bg-white/5 rounded-full flex items-center justify-center mb-4 md:mb-6">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 md:w-8 md:h-8 text-gray-500"><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" /></svg>
                             </div>
                             <h3 className="text-white font-bold text-lg md:text-xl mb-2">No Active Accounts</h3>
-                            <p className="text-blue-200/50 text-xs md:text-sm max-w-xs md:max-w-sm mb-6 leading-relaxed">Open a real account by making a minimum deposit of $50 to start trading.</p>
+                            <p className="text-gray-400 text-xs md:text-sm max-w-xs md:max-w-sm mb-6 leading-relaxed">Open a real account by making a minimum deposit of $50 to start trading.</p>
                             <button onClick={() => setActivePage('deposit')} className="text-blue-500 hover:text-blue-400 font-bold text-xs md:text-sm flex items-center gap-1 transition">Deposit to Start <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg></button>
                         </div>
                     ) : (
@@ -1319,6 +1400,9 @@ export default function Dashboard() {
 
         </div>
       </main>
+      
+      {/* Draggable Support Button remains perfectly intact below */}
+      <DraggableSupportButton />
     </div>
   );
 }
