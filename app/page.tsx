@@ -161,7 +161,7 @@ export default function Home() {
           <div className="flex-shrink-0 cursor-pointer group z-50">
             <Link href="/">
                 <span className="text-2xl font-bold tracking-tighter text-white">
-                TRADE<span className="text-blue-500">CORE</span>
+                GAV<span className="text-blue-500">BLUE</span>
                 </span>
             </Link>
           </div>
@@ -263,10 +263,10 @@ export default function Home() {
             </Link>
           </div>
 
-          {/* MOBILE MENU BUTTON */}
+          {/* MOBILE MENU BUTTON & OVERLAY */}
           <button 
              className="md:hidden text-white p-2 z-50 relative"
-             onClick={() => { setMobileMenuOpen(!mobileMenuOpen); setMobileAppsOpen(false); }}
+             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
              {mobileMenuOpen ? (
                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -402,7 +402,7 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="col-span-1 md:col-span-2 p-6 md:p-10 rounded-3xl bg-[#0A0A0A] border border-white/5 hover:border-blue-500/50 transition-all group relative overflow-hidden">
                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-[50px]"></div>
-               <h3 className="text-2xl font-bold text-white mb-2">TradeCore WebTrader</h3>
+               <h3 className="text-2xl font-bold text-white mb-2">Gavblue WebTrader</h3>
                <p className="text-gray-400 mb-6">Analyze the markets with our powerful, built-in charting platform.</p>
                <div className="w-full h-[400px] md:h-[500px] bg-[#050505] rounded-xl border border-white/10 overflow-hidden relative z-10">
                   <div className="tradingview-widget-container h-full w-full" ref={chartRef}></div>
@@ -520,9 +520,11 @@ export default function Home() {
             
             {/* LOGO & DESC - Top on Mobile, Left on Desktop */}
             <div className="w-full md:w-1/4">
-              <span className="text-2xl font-bold text-white">TRADE<span className="text-blue-500">CORE</span></span>
+              <span className="text-2xl font-bold text-white">GAV<span className="text-blue-500">BLUE</span></span>
               <p className="text-gray-500 text-sm mt-4 leading-relaxed">
-                The world's leading premium broker. Licensed and regulated.
+                The world's leading premium broker. Licensed and regulated.<br/>
+                <a href="https://www.gavblue.com" className="hover:text-blue-400 transition">www.gavblue.com</a><br/>
+                <a href="mailto:info@gavblue.com" className="hover:text-blue-400 transition">info@gavblue.com</a>
               </p>
             </div>
 
@@ -562,8 +564,9 @@ export default function Home() {
               74-89% of retail investor accounts lose money when trading CFDs with this provider. 
               You should consider whether you understand how CFDs work and whether you can afford to take the high risk of losing your money.
               <br /><br />
-              This platform is currently in Pre-Launch Beta. No real-money trading services are offered at this time.
+              This platform is currently in Launched.real-money trading services are offered at this time.
             </p>
+            <p className="text-gray-600 text-xs mt-6">© 2026 Gavblue Technologies. All rights reserved.</p>
           </div>
         </div>
       </footer>

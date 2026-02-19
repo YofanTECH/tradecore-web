@@ -8,7 +8,7 @@ export default function RiskPage() {
       
       <nav className="fixed w-full z-50 bg-[#050505]/90 backdrop-blur-xl border-b border-white/5 py-4">
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold tracking-tighter text-white">TRADE<span className="text-blue-500">CORE</span></Link>
+          <Link href="/" className="text-2xl font-bold tracking-tighter text-white">GAV<span className="text-blue-500">BLUE</span></Link>
           <Link href="/" className="text-sm text-gray-400 hover:text-white transition">Back Home</Link>
         </div>
       </nav>
@@ -19,7 +19,7 @@ export default function RiskPage() {
             <h1 className="text-4xl font-bold mb-8">Risk Disclosure</h1>
             
             <div className="space-y-8 text-gray-400 leading-relaxed text-sm">
-                <p>Last updated: January 15, 2026</p>
+                <p>Last updated: February 19, 2026</p>
                 <h3 className="text-xl font-bold text-white pt-4">High Risk Warning</h3>
                 <p>Trading Forex and CFDs (Contract For Difference) is highly speculative, carries a high level of risk and may not be suitable for all investors. You may lose some or all of your invested capital, therefore you should not speculate with capital that you cannot afford to lose.</p>
 
@@ -27,13 +27,13 @@ export default function RiskPage() {
                 <p>The leverage available in CFD trading can work against you as well as for you. High leverage can lead to large losses as well as gains.</p>
 
                 <h3 className="text-xl font-bold text-white pt-4">No Advice</h3>
-                <p>TradeCore provides an execution-only service. We do not provide investment advice or recommendations regarding any financial instruments.</p>
+                <p>Gavblue provides an execution-only service. We do not provide investment advice or recommendations regarding any financial instruments.</p>
             </div>
          </div>
       </section>
 
       <footer className="border-t border-white/5 bg-black py-10 text-center">
-         <p className="text-gray-600 text-xs">© 2026 TradeCore Technologies. All rights reserved.</p>
+         <p className="text-gray-600 text-xs">© 2026 Gavblue Technologies. All rights reserved.</p>
       </footer>
     </div>
   );

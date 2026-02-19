@@ -20,7 +20,7 @@ export default function CompanyHub() {
       <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? 'bg-[#050505]/90 backdrop-blur-xl border-b border-white/5 py-4' : 'bg-transparent py-6'}`}>
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
           <Link href="/" className="text-2xl font-bold tracking-tighter text-white cursor-pointer">
-              TRADE<span className="text-blue-500">CORE</span>
+              GAV<span className="text-blue-500">BLUE</span>
           </Link>
           <div className="flex items-center gap-8">
              <Link href="/" className="text-sm font-medium text-gray-400 hover:text-white transition hidden md:block">Home</Link>
@@ -45,7 +45,7 @@ export default function CompanyHub() {
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-200 to-blue-500">Modern Finance.</span>
             </h1>
             <p className="text-xl text-gray-400 leading-relaxed max-w-3xl mx-auto mb-12 font-light">
-              TradeCore isn't just a broker. We are a fintech powerhouse building the infrastructure that connects retail traders to institutional liquidity.
+              Gavblue isn't just a broker. We are a fintech powerhouse building the infrastructure that connects retail traders to institutional liquidity.
             </p>
          </div>
       </section>
@@ -95,7 +95,7 @@ export default function CompanyHub() {
                   {/* Pillar 2 */}
                   <div className="p-10 rounded-3xl bg-[#0A0A0A] border border-white/10 hover:border-purple-500/50 transition-all duration-500 group">
                       <div className="w-14 h-14 bg-purple-500/10 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7 text-purple-500"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" /></svg>
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7 text-purple-500"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" /></svg>
                       </div>
                       <h3 className="text-2xl font-bold text-white mb-4">Radical Transparency</h3>
                       <p className="text-gray-400 leading-relaxed">
@@ -120,7 +120,7 @@ export default function CompanyHub() {
       {/* --- EXPLORE SECTION (NAVIGATION) --- */}
       <section className="py-20 bg-[#0A0A0A] border-t border-white/5">
          <div className="max-w-7xl mx-auto px-6">
-            <h2 className="text-3xl font-bold mb-12 text-center">Explore TradeCore</h2>
+            <h2 className="text-3xl font-bold mb-12 text-center">Explore Gavblue</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 
@@ -169,7 +169,7 @@ export default function CompanyHub() {
 
       {/* FOOTER */}
       <footer className="border-t border-white/5 bg-black py-16 text-center">
-         <p className="text-gray-600 text-xs">© 2026 TradeCore Technologies. All rights reserved.</p>
+         <p className="text-gray-600 text-xs">© 2026 Gavblue Technologies. All rights reserved.</p>
       </footer>
     </div>
   );

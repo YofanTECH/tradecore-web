@@ -19,10 +19,10 @@ export default function ContactPage() {
       <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? 'bg-[#050505]/90 backdrop-blur-xl border-b border-white/5 py-4' : 'bg-transparent py-6'}`}>
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
           <Link href="/" className="text-2xl font-bold tracking-tighter text-white cursor-pointer">
-              TRADE<span className="text-blue-500">CORE</span>
+              GAV<span className="text-blue-500">BLUE</span>
           </Link>
           <div className="flex items-center gap-6">
-             <Link href="/company" className="text-sm font-medium text-gray-400 hover:text-white transition flex items-center gap-2">
+             <Link href="/company/about" className="text-sm font-medium text-gray-400 hover:text-white transition flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" /></svg>
                 Back to Company
              </Link>
@@ -61,7 +61,7 @@ export default function ContactPage() {
                       </div>
                       <h3 className="text-xl font-bold text-white mb-2">General Support</h3>
                       <p className="text-gray-400 text-sm mb-4">For account queries and technical assistance.</p>
-                      <a href="mailto:support@tradecore.com" className="text-white font-mono hover:text-green-500 transition">support@tradecore.com &rarr;</a>
+                      <a href="mailto:info@gavblue.com" className="text-white font-mono hover:text-green-500 transition">info@gavblue.com &rarr;</a>
                   </div>
 
                   {/* Partnership Card */}
@@ -71,7 +71,7 @@ export default function ContactPage() {
                       </div>
                       <h3 className="text-xl font-bold text-white mb-2">Partnerships</h3>
                       <p className="text-gray-400 text-sm mb-4">For IBs, Affiliates, and Institutional services.</p>
-                      <a href="mailto:partners@tradecore.com" className="text-white font-mono hover:text-purple-500 transition">partners@tradecore.com &rarr;</a>
+                      <a href="mailto:partners@gavblue.com" className="text-white font-mono hover:text-purple-500 transition">partners@gavblue.com &rarr;</a>
                   </div>
 
                   {/* HQ Card */}
@@ -164,7 +164,7 @@ export default function ContactPage() {
       {/* --- FOOTER --- */}
       <footer className="border-t border-white/5 bg-black py-12 text-center">
          <div className="max-w-4xl mx-auto px-6">
-             <p className="text-gray-600 text-xs">© 2026 TradeCore Technologies. All rights reserved.</p>
+             <p className="text-gray-600 text-xs">© 2026 Gavblue Technologies. All rights reserved.</p>
          </div>
       </footer>
 

@@ -297,7 +297,7 @@ function AuthContent() {
   const filteredCountries = countries.filter(c => c.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
-    <div className="flex flex-col items-center justify-center w-full max-w-[480px] px-4"> {/* ADDED PX-4 */}
+    <div className="flex flex-col items-center justify-center w-full max-w-[480px] px-4">
       
       {/* MODALS */}
       <CaptchaModal isOpen={showCaptcha} onClose={() => setShowCaptcha(false)} onSuccess={handleCaptchaSuccess} />
@@ -313,7 +313,7 @@ function AuthContent() {
                 <span className="text-sm font-medium hidden md:block">Back</span>
              </Link>
              <Link href="/" className="flex items-center gap-2 group cursor-pointer">
-                <span className="text-2xl font-bold tracking-tighter text-white">TRADE<span className="text-blue-500">CORE</span></span>
+                <span className="text-2xl font-bold tracking-tighter text-white">GAV<span className="text-blue-500">BLUE</span></span>
              </Link>
          </div>
          <div className="text-sm text-gray-400">
@@ -465,10 +465,10 @@ export default function LoginPage() {
 
       <div className="max-w-4xl mx-auto px-6 mt-16 text-center space-y-6 opacity-60 pb-10">
           <div className="text-[10px] text-gray-500 leading-relaxed space-y-4">
-              <p>TradeCore does not offer services to residents of certain jurisdictions including the USA, Iran, North Korea, the European Union, the United Kingdom and others. The content of the website including translations should not be construed as means for solicitation. Investors make their own and independent decisions.</p>
+              <p>Gavblue does not offer services to residents of certain jurisdictions including the USA, Iran, North Korea, the European Union, the United Kingdom and others. The content of the website including translations should not be construed as means for solicitation. Investors make their own and independent decisions.</p>
               <p>Trading in CFDs and generally leveraged products involves substantial risk of loss and you may lose all of your invested capital.</p>
-              <p>TradeCore (SC) Ltd is a Securities Dealer registered in Seychelles with registration number 8423606-1 and authorised by the Financial Services Authority (FSA) with licence number SD025. The registered office of TradeCore (SC) Ltd is at 9A CT House, 2nd floor, Providence, Mahe, Seychelles.</p>
-              <p>TradeCore B.V. is a Securities Intermediary registered in Curaçao with registration number 148698(0) and authorised by the Central Bank of Curaçao and Sint Maarten (CBCS) with licence number 0003LSI. The registered office of TradeCore B.V. is at Emancipatie Boulevard Dominico F. "Don" Martina 31, Curaçao.</p>
+              <p>Gavblue (SC) Ltd is a Securities Dealer registered in Seychelles with registration number 8423606-1 and authorised by the Financial Services Authority (FSA) with licence number SD025. The registered office of Gavblue (SC) Ltd is at 9A CT House, 2nd floor, Providence, Mahe, Seychelles.</p>
+              <p>Gavblue B.V. is a Securities Intermediary registered in Curaçao with registration number 148698(0) and authorised by the Central Bank of Curaçao and Sint Maarten (CBCS) with licence number 0003LSI. The registered office of Gavblue B.V. is at Emancipatie Boulevard Dominico F. "Don" Martina 31, Curaçao.</p>
           </div>
           <div className="flex flex-wrap justify-center gap-4 md:gap-6 text-[10px] text-blue-500/60 font-medium">
               <a href="#" className="hover:text-blue-400">Privacy Agreement</a>
@@ -476,7 +476,7 @@ export default function LoginPage() {
               <a href="#" className="hover:text-blue-400">Security Instructions</a>
               <a href="#" className="hover:text-blue-400">Preventing Money Laundering</a>
           </div>
-          <div className="text-[10px] text-gray-600">© 2026 TradeCore Technologies. All rights reserved.</div>
+          <div className="text-[10px] text-gray-600">© 2026 Gavblue Technologies. All rights reserved.</div>
       </div>
     </div>
   );

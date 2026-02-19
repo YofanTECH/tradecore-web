@@ -19,7 +19,7 @@ export default function AboutPage() {
       <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? 'bg-[#050505]/90 backdrop-blur-xl border-b border-white/5 py-4' : 'bg-transparent py-6'}`}>
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
           <Link href="/" className="text-2xl font-bold tracking-tighter text-white cursor-pointer">
-              TRADE<span className="text-blue-500">CORE</span>
+              GAV<span className="text-blue-500">BLUE</span>
           </Link>
           <Link href="/company" className="text-sm font-medium text-gray-400 hover:text-white transition flex items-center gap-2">
              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" /></svg>
@@ -40,7 +40,7 @@ export default function AboutPage() {
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-white">By Traders.</span>
             </h1>
             <p className="text-xl text-gray-400 leading-relaxed max-w-2xl mx-auto">
-              We started TradeCore with a simple mission: to democratize institutional-grade trading infrastructure for the retail market. No dealing desks. No re-quotes. Just pure execution.
+              We started Gavblue with a simple mission: to democratize institutional-grade trading infrastructure for the retail market. No dealing desks. No re-quotes. Just pure execution.
             </p>
          </div>
       </section>
@@ -123,7 +123,7 @@ export default function AboutPage() {
                      <div>
                          <span className="md:hidden text-2xl font-bold text-blue-500 block mb-2">2018</span>
                          <h4 className="text-xl font-bold text-white mb-2">Inception</h4>
-                         <p className="text-gray-400 text-sm">TradeCore is founded in London with a vision to build a better broker.</p>
+                         <p className="text-gray-400 text-sm">Gavblue is founded in London with a vision to build a better broker.</p>
                      </div>
                  </div>
 
@@ -153,7 +153,7 @@ export default function AboutPage() {
                      <div>
                          <span className="md:hidden text-2xl font-bold text-gray-500 block mb-2">2023</span>
                          <h4 className="text-xl font-bold text-white mb-2">New Tech Stack</h4>
-                         <p className="text-gray-400 text-sm">Launched TradeCore Web 2.0 with integrated TradingView charts.</p>
+                         <p className="text-gray-400 text-sm">Launched Gavblue Web 2.0 with integrated TradingView charts.</p>
                      </div>
                  </div>
 
@@ -183,7 +183,7 @@ export default function AboutPage() {
              <h3 className="text-2xl font-bold text-white mb-4">Ready to trade with a leader?</h3>
              <p className="text-gray-400 mb-8">Join thousands of traders who have already made the switch.</p>
              <Link href="/login?view=signup" className="px-8 py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-500 transition">Create Account</Link>
-             <p className="text-gray-600 text-xs mt-12">© 2026 TradeCore Technologies. All rights reserved.</p>
+             <p className="text-gray-600 text-xs mt-12">© 2026 Gavblue Technologies. All rights reserved.</p>
          </div>
       </footer>
 

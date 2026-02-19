@@ -121,8 +121,8 @@ export default function MarketsPage() {
       {/* --- NAVBAR --- */}
       <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? 'bg-[#050505]/95 backdrop-blur-xl border-b border-white/5 py-4' : 'bg-transparent py-6'}`}>
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold tracking-tighter text-white cursor-pointer">
-              TRADE<span className="text-blue-500">CORE</span>
+          <Link href="/" className="text-2xl font-bold tracking-tighter text-white cursor-pointer uppercase">
+              gav<span className="text-blue-500">blue</span>
           </Link>
           <div className="flex items-center gap-4">
              <Link href="/" className="text-sm font-medium text-gray-400 hover:text-white transition flex items-center gap-2">
@@ -188,10 +188,14 @@ export default function MarketsPage() {
             
             {/* LOGO & DESC - Top on Mobile, Left on Desktop */}
             <div className="w-full md:w-1/4">
-              <span className="text-2xl font-bold text-white">TRADE<span className="text-blue-500">CORE</span></span>
+              <span className="text-2xl font-bold text-white uppercase">gav<span className="text-blue-500">blue</span></span>
               <p className="text-gray-500 text-sm mt-4 leading-relaxed">
                 The world's leading premium broker. Licensed and regulated.
               </p>
+              <div className="mt-4 flex flex-col gap-1 text-sm text-gray-400">
+                <a href="mailto:info@gavblue.com" className="hover:text-blue-500 transition-colors">info@gavblue.com</a>
+                <a href="https://www.gavblue.com" target="_blank" rel="noopener noreferrer" className="hover:text-blue-500 transition-colors">www.gavblue.com</a>
+              </div>
             </div>
 
             {/* LINKS - Side-by-Side (3 Cols) on Mobile & Desktop */}

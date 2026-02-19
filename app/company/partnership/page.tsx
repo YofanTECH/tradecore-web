@@ -19,7 +19,7 @@ export default function PartnershipPage() {
       <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? 'bg-[#050505]/90 backdrop-blur-xl border-b border-white/5 py-4' : 'bg-transparent py-6'}`}>
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
           <Link href="/" className="text-2xl font-bold tracking-tighter text-white cursor-pointer">
-              TRADE<span className="text-blue-500">CORE</span>
+              GAV<span className="text-blue-500">BLUE</span>
           </Link>
           <div className="flex items-center gap-6">
              <Link href="/company" className="text-sm font-medium text-gray-400 hover:text-white transition flex items-center gap-2">
@@ -46,7 +46,7 @@ export default function PartnershipPage() {
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-white">A Global Leader.</span>
             </h1>
             <p className="text-xl text-gray-400 leading-relaxed max-w-3xl mx-auto mb-10">
-              Join the TradeCore Partner Ecosystem. Whether you are an Introducer Broker (IB), Affiliate, or Fund Manager, we provide the tools, payouts, and support you need to scale.
+              Join the Gavblue Partner Ecosystem. Whether you are an Introducer Broker (IB), Affiliate, or Fund Manager, we provide the tools, payouts, and support you need to scale.
             </p>
             <div className="flex justify-center gap-4">
                 <Link href="/login?view=signup" className="px-8 py-4 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-500 transition shadow-lg shadow-purple-500/20">
@@ -82,7 +82,7 @@ export default function PartnershipPage() {
       <section className="py-32 px-6">
           <div className="max-w-7xl mx-auto">
               <div className="mb-20 text-center md:text-left">
-                  <h2 className="text-4xl font-bold mb-4">Why TradeCore?</h2>
+                  <h2 className="text-4xl font-bold mb-4">Why Gavblue?</h2>
                   <p className="text-gray-400 max-w-xl">We treat our partners as an extension of our team. Your success is our business model.</p>
               </div>
 
@@ -147,7 +147,7 @@ export default function PartnershipPage() {
                          <span className="text-3xl font-bold text-purple-500">2</span>
                      </div>
                      <h3 className="text-xl font-bold text-white mb-2">Refer</h3>
-                     <p className="text-gray-400 text-sm max-w-xs mx-auto">Use your unique tracking link to refer clients to TradeCore's premium trading environment.</p>
+                     <p className="text-gray-400 text-sm max-w-xs mx-auto">Use your unique tracking link to refer clients to Gavblue's premium trading environment.</p>
                  </div>
 
                  <div className="relative z-10 text-center group">
@@ -165,9 +165,9 @@ export default function PartnershipPage() {
       <footer className="border-t border-white/5 bg-black py-16 text-center">
          <div className="max-w-4xl mx-auto px-6">
              <h3 className="text-2xl font-bold text-white mb-4">Ready to grow your income?</h3>
-             <p className="text-gray-400 mb-8">Join the thousands of partners who trust TradeCore.</p>
+             <p className="text-gray-400 mb-8">Join the thousands of partners who trust Gavblue.</p>
              <Link href="/login?view=signup" className="px-10 py-4 bg-white text-black rounded-lg font-bold hover:bg-gray-200 transition">Become a Partner</Link>
-             <p className="text-gray-600 text-xs mt-12">© 2026 TradeCore Technologies. All rights reserved.</p>
+             <p className="text-gray-600 text-xs mt-12">© 2026 Gavblue Technologies. All rights reserved.</p>
          </div>
       </footer>
 

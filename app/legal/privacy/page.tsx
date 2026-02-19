@@ -8,7 +8,7 @@ export default function PrivacyPage() {
       
       <nav className="fixed w-full z-50 bg-[#050505]/90 backdrop-blur-xl border-b border-white/5 py-4">
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold tracking-tighter text-white">TRADE<span className="text-blue-500">CORE</span></Link>
+          <Link href="/" className="text-2xl font-bold tracking-tighter text-white">GAV<span className="text-blue-500">BLUE</span></Link>
           <Link href="/" className="text-sm text-gray-400 hover:text-white transition">Close</Link>
         </div>
       </nav>
@@ -19,10 +19,10 @@ export default function PrivacyPage() {
             <h1 className="text-4xl font-bold mb-8">Privacy Policy</h1>
             
             <div className="space-y-8 text-gray-400 leading-relaxed text-sm">
-                <p>Last updated: January 15, 2026</p>
+                <p>Last updated: February 19, 2026</p>
                 
                 <h3 className="text-xl font-bold text-white pt-4">1. Introduction</h3>
-                <p>TradeCore ("we", "our", "us") respects your privacy and is committed to protecting your personal data. This privacy policy will inform you as to how we look after your personal data when you visit our website and tell you about your privacy rights and how the law protects you.</p>
+                <p>Gavblue ("we", "our", "us") respects your privacy and is committed to protecting your personal data. This privacy policy will inform you as to how we look after your personal data when you visit our website and tell you about your privacy rights and how the law protects you.</p>
 
                 <h3 className="text-xl font-bold text-white pt-4">2. Data We Collect</h3>
                 <p>We may collect, use, store and transfer different kinds of personal data about you which we have grouped together follows: Identity Data, Contact Data, Financial Data, and Transaction Data.</p>
@@ -37,7 +37,7 @@ export default function PrivacyPage() {
       </section>
 
       <footer className="border-t border-white/5 bg-black py-10 text-center">
-         <p className="text-gray-600 text-xs">© 2026 TradeCore Technologies.</p>
+         <p className="text-gray-600 text-xs">© 2026 Gavblue Technologies. All rights reserved.</p>
       </footer>
     </div>
   );

@@ -183,8 +183,8 @@ export default function ToolsPage() {
           {/* Logo */}
           <div className="flex-shrink-0 cursor-pointer group z-50">
             <Link href="/">
-                <span className="text-2xl font-bold tracking-tighter text-white">
-                TRADE<span className="text-blue-500">CORE</span>
+                <span className="text-2xl font-bold tracking-tighter text-white uppercase">
+                gav<span className="text-blue-500">blue</span>
                 </span>
             </Link>
           </div>
@@ -388,11 +388,19 @@ export default function ToolsPage() {
 
       {/* --- FOOTER --- */}
       <footer className="border-t border-white/5 bg-black py-16 text-center">
-         <div className="max-w-4xl mx-auto px-6">
+         <div className="max-w-4xl mx-auto px-6 flex flex-col items-center">
+             <span className="text-3xl font-bold text-white uppercase mb-8">gav<span className="text-blue-500">blue</span></span>
              <h3 className="text-2xl font-bold text-white mb-4">Ready to trade?</h3>
              <p className="text-gray-400 mb-8">Create an account in minutes and access these markets.</p>
              <Link href="/login?view=signup" className="px-10 py-4 bg-white text-black rounded-lg font-bold hover:bg-gray-200 transition">Start Trading</Link>
-             <p className="text-gray-600 text-xs mt-12">© 2026 TradeCore Technologies. All rights reserved.</p>
+             
+             <div className="mt-12 flex flex-col md:flex-row items-center justify-center gap-4 text-sm text-gray-400">
+                <a href="mailto:info@gavblue.com" className="hover:text-blue-500 transition-colors">info@gavblue.com</a>
+                <span className="hidden md:inline text-gray-600">|</span>
+                <a href="https://www.gavblue.com" target="_blank" rel="noopener noreferrer" className="hover:text-blue-500 transition-colors">www.gavblue.com</a>
+             </div>
+             
+             <p className="text-gray-600 text-xs mt-6">© 2026 gavblue. All rights reserved.</p>
          </div>
       </footer>
 
