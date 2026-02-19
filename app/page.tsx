@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 
 // ============================================================================
-// AI SUPPORT CHAT COMPONENT (NOW POWERED BY REAL AI API)
+// AI SUPPORT CHAT COMPONENT (WITH LIVE CONNECTION SIMULATION)
 // ============================================================================
 const AGENT_NAMES = ["Elena", "Liam", "Sofia", "Mateo", "Yuki", "Amara", "Julian", "Chloe", "Kael", "Anya"];
 
@@ -17,24 +17,48 @@ const AiSupportChat = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [agentName, setAgentName] = useState('Support');
     
+    // NEW: Connection Simulation States
+    const [isConnecting, setIsConnecting] = useState(false);
+    const [hasConnected, setHasConnected] = useState(false);
+
     const [messages, setMessages] = useState<{role: 'ai'|'user', text: string}[]>([]);
     const [inputValue, setInputValue] = useState('');
     const [isTyping, setIsTyping] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    // Pick a random agent name on mount
+    // Pick a random agent name on mount (but don't set message yet)
     useEffect(() => {
         const randomName = AGENT_NAMES[Math.floor(Math.random() * AGENT_NAMES.length)];
         setAgentName(randomName);
-        setMessages([
-            { role: 'ai', text: `Hello! My name is ${randomName}, your dedicated Gavblue Trading Specialist. How can I help you dominate the markets today?` }
-        ]);
     }, []);
+
+    // LIVE CONNECTION SIMULATION
+    useEffect(() => {
+        if (isOpen && !hasConnected && !isConnecting) {
+            setIsConnecting(true);
+            
+            // Step 1: Simulate network connection routing (2 seconds)
+            setTimeout(() => {
+                setIsConnecting(false);
+                setHasConnected(true);
+                setIsTyping(true); // Step 2: Agent starts typing
+                
+                // Step 3: Send initial greeting (1.2 seconds later)
+                setTimeout(() => {
+                    setMessages([
+                        { role: 'ai', text: `Hello! My name is ${agentName}, your dedicated Gavblue Trading Specialist. How can I help you dominate the markets today?` }
+                    ]);
+                    setIsTyping(false);
+                }, 1200);
+
+            }, 2000);
+        }
+    }, [isOpen, hasConnected, isConnecting, agentName]);
 
     // Auto-scroll to bottom of chat
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages, isTyping]);
+    }, [messages, isTyping, hasConnected]);
 
     // Dragging Logic
     const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
@@ -87,7 +111,7 @@ const AiSupportChat = () => {
     // --- REAL AI INTEGRATION LOGIC ---
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!inputValue.trim()) return;
+        if (!inputValue.trim() || !hasConnected) return;
 
         const userMsg = inputValue.trim();
         // Add user message to UI immediately
@@ -156,11 +180,17 @@ const AiSupportChat = () => {
                 <div className="h-16 bg-[#111] border-b border-white/5 flex items-center px-4 justify-between flex-shrink-0">
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
-                            {agentName.charAt(0)}
+                            {hasConnected ? agentName.charAt(0) : <span className="animate-pulse">...</span>}
                         </div>
                         <div>
-                            <h3 className="text-white font-bold text-sm">{agentName} - Gavblue Support</h3>
-                            <p className="text-[10px] text-green-400 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block"></span> Online</p>
+                            <h3 className="text-white font-bold text-sm">{hasConnected ? `${agentName} - Gavblue Support` : 'Gavblue Support'}</h3>
+                            <p className="text-[10px] text-gray-400 flex items-center gap-1">
+                                {hasConnected ? (
+                                    <><span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block"></span> Online</>
+                                ) : (
+                                    <><span className="w-1.5 h-1.5 rounded-full bg-yellow-500 inline-block animate-pulse"></span> Connecting...</>
+                                )}
+                            </p>
                         </div>
                     </div>
                     <button onClick={() => setIsOpen(false)} className="text-gray-500 hover:text-white transition"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
@@ -168,21 +198,32 @@ const AiSupportChat = () => {
 
                 {/* Messages */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-white/10">
-                    {messages.map((msg, idx) => (
-                        <div key={idx} className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-[#1A1A1A] text-gray-200 border border-white/5 rounded-bl-none'}`}>
-                                {msg.text}
-                            </div>
+                    {!hasConnected ? (
+                        // Connecting Spinner Overlay
+                        <div className="flex flex-col items-center justify-center h-full space-y-4 opacity-70">
+                            <div className="w-10 h-10 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+                            <p className="text-[10px] text-blue-500 font-bold uppercase tracking-widest animate-pulse">Connecting to Agent...</p>
                         </div>
-                    ))}
-                    {isTyping && (
-                        <div className="flex w-full justify-start">
-                            <div className="max-w-[85%] rounded-2xl px-4 py-3 bg-[#1A1A1A] border border-white/5 rounded-bl-none flex items-center gap-1.5">
-                                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
-                                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></span>
-                                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></span>
-                            </div>
-                        </div>
+                    ) : (
+                        // Real Messages
+                        <>
+                            {messages.map((msg, idx) => (
+                                <div key={idx} className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                    <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-[#1A1A1A] text-gray-200 border border-white/5 rounded-bl-none'}`}>
+                                        {msg.text}
+                                    </div>
+                                </div>
+                            ))}
+                            {isTyping && (
+                                <div className="flex w-full justify-start">
+                                    <div className="max-w-[85%] rounded-2xl px-4 py-3 bg-[#1A1A1A] border border-white/5 rounded-bl-none flex items-center gap-1.5">
+                                        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
+                                        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></span>
+                                        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></span>
+                                    </div>
+                                </div>
+                            )}
+                        </>
                     )}
                     <div ref={messagesEndRef} />
                 </div>
@@ -194,12 +235,13 @@ const AiSupportChat = () => {
                             type="text" 
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
-                            placeholder={`Reply to ${agentName}...`}
-                            className="w-full bg-[#111] border border-white/10 text-white text-sm rounded-xl pl-4 pr-12 py-3 outline-none focus:border-blue-500 transition-colors"
+                            disabled={!hasConnected || isTyping}
+                            placeholder={hasConnected ? `Reply to ${agentName}...` : "Please wait..."}
+                            className="w-full bg-[#111] border border-white/10 text-white text-sm rounded-xl pl-4 pr-12 py-3 outline-none focus:border-blue-500 transition-colors disabled:opacity-50"
                         />
                         <button 
                             type="submit" 
-                            disabled={!inputValue.trim() || isTyping}
+                            disabled={!inputValue.trim() || isTyping || !hasConnected}
                             className="absolute right-2 w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white hover:bg-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 translate-x-px -translate-y-px"><path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" /></svg>
