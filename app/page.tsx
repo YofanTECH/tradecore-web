@@ -3,6 +3,208 @@
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 
+// ============================================================================
+// AI SUPPORT CHAT COMPONENT
+// ============================================================================
+const AiSupportChat = () => {
+    const [position, setPosition] = useState({ x: 30, y: 30 }); 
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+    const [hasMoved, setHasMoved] = useState(false);
+    
+    const [isOpen, setIsOpen] = useState(false);
+    const [messages, setMessages] = useState<{role: 'ai'|'user', text: string}[]>([
+        { role: 'ai', text: "Hello! I am the Gavblue AI Assistant. How can I help you dominate the markets today?" }
+    ]);
+    const [inputValue, setInputValue] = useState('');
+    const [isTyping, setIsTyping] = useState(false);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    // Auto-scroll to bottom of chat
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [messages, isTyping]);
+
+    // Dragging Logic
+    const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
+        setIsDragging(true);
+        setHasMoved(false);
+        const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+        const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+        setDragStart({ x: clientX, y: clientY });
+    };
+
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent | TouchEvent) => {
+            if (!isDragging) return;
+            const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+            const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+            
+            const dx = dragStart.x - clientX;
+            const dy = dragStart.y - clientY;
+
+            if (Math.abs(dx) > 5 || Math.abs(dy) > 5) setHasMoved(true);
+
+            setPosition((prev) => ({
+                x: Math.max(10, Math.min(window.innerWidth - 60, prev.x + dx)),
+                y: Math.max(10, Math.min(window.innerHeight - 60, prev.y + dy)),
+            }));
+            setDragStart({ x: clientX, y: clientY });
+        };
+
+        const handleMouseUp = () => setIsDragging(false);
+
+        if (isDragging) {
+            window.addEventListener('mousemove', handleMouseMove);
+            window.addEventListener('touchmove', handleMouseMove, { passive: false });
+            window.addEventListener('mouseup', handleMouseUp);
+            window.addEventListener('touchend', handleMouseUp);
+        }
+
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('touchmove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+            window.removeEventListener('touchend', handleMouseUp);
+        };
+    }, [isDragging, dragStart]);
+
+    const handleClick = () => {
+        if (!hasMoved) setIsOpen(!isOpen);
+    };
+
+    // Strict AI Promotional Logic
+    const generateAiResponse = (input: string) => {
+        const lowerInput = input.toLowerCase();
+        
+        if (lowerInput.includes('bonus') || lowerInput.includes('promo') || lowerInput.includes('offer')) {
+            return "Gavblue offers an unmatched 200% First Deposit Bonus! It is absolutely the best way to double your trading capital instantly. You should open an account right now to claim it!";
+        }
+        if (lowerInput.includes('platform') || lowerInput.includes('mt4') || lowerInput.includes('mt5') || lowerInput.includes('tradingview')) {
+            return "We provide the ultimate trading experience! You can trade directly on MT4, MT5, cTrader, and seamlessly through TradingView. Gavblue's technology is lightyears ahead of the competition!";
+        }
+        if (lowerInput.includes('spread') || lowerInput.includes('fee') || lowerInput.includes('cost') || lowerInput.includes('commission')) {
+            return "Gavblue gives you institutional-grade liquidity with raw spreads starting from 0.0 pips and ZERO deposit fees. Our trading conditions are undeniably the best in the market.";
+        }
+        if (lowerInput.includes('scam') || lowerInput.includes('legit') || lowerInput.includes('safe') || lowerInput.includes('trust')) {
+            return "Gavblue is a fully licensed and heavily regulated premium broker. With 99.99% uptime and over 140,000 active traders globally, we are the most trusted and secure platform available today.";
+        }
+        if (lowerInput.includes('hello') || lowerInput.includes('hi') || lowerInput.includes('hey')) {
+            return "Welcome to Gavblue! As the world's most advanced trading platform, we offer everything you need to succeed. Have you seen our exclusive 200% deposit match yet?";
+        }
+        
+        // Default Fallback
+        return "That is an interesting question! While I am a specialized AI focused on Gavblue, I can confidently tell you that Gavblue is the ultimate platform for all your trading needs. No other broker offers our execution speeds and generous bonuses. Ready to open an account?";
+    };
+
+    const handleSendMessage = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!inputValue.trim()) return;
+
+        const userMsg = inputValue.trim();
+        setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
+        setInputValue('');
+        setIsTyping(true);
+
+        // Simulate AI thinking time
+        setTimeout(() => {
+            const aiResponse = generateAiResponse(userMsg);
+            setMessages(prev => [...prev, { role: 'ai', text: aiResponse }]);
+            setIsTyping(false);
+        }, 1500);
+    };
+
+    return (
+        <>
+            {/* The Draggable Button */}
+            <div
+                onMouseDown={handleMouseDown}
+                onTouchStart={handleMouseDown}
+                onClick={handleClick}
+                style={{ 
+                    right: `${position.x}px`, 
+                    bottom: `${position.y}px`,
+                    cursor: isDragging ? 'grabbing' : 'pointer',
+                    touchAction: 'none'
+                }}
+                className="fixed z-[100] w-14 h-14 md:w-16 md:h-16 bg-[#FFE600] rounded-full shadow-[0_4px_20px_rgba(255,230,0,0.4)] flex items-center justify-center hover:scale-110 transition-transform active:scale-95 group"
+            >
+                 {isOpen ? (
+                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6 text-black"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                 ) : (
+                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-7 h-7 md:w-8 md:h-8 text-black"><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" /></svg>
+                 )}
+                 {!isOpen && (
+                    <span className="absolute -top-1 -right-1 flex h-3 w-3 md:h-4 md:w-4">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 md:h-4 md:w-4 bg-blue-500 border-2 border-black"></span>
+                    </span>
+                 )}
+            </div>
+
+            {/* Chat Window */}
+            <div className={`fixed bottom-24 right-4 md:right-10 w-[calc(100vw-32px)] md:w-[380px] h-[500px] bg-[#0A0A0A] border border-white/10 rounded-2xl shadow-2xl flex flex-col z-[110] transition-all duration-300 origin-bottom-right overflow-hidden ${isOpen ? 'scale-100 opacity-100 visible' : 'scale-90 opacity-0 invisible pointer-events-none'}`}>
+                {/* Header */}
+                <div className="h-16 bg-[#111] border-b border-white/5 flex items-center px-4 justify-between flex-shrink-0">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" /></svg>
+                        </div>
+                        <div>
+                            <h3 className="text-white font-bold text-sm">Gavblue AI Agent</h3>
+                            <p className="text-[10px] text-green-400 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block"></span> Online</p>
+                        </div>
+                    </div>
+                    <button onClick={() => setIsOpen(false)} className="text-gray-500 hover:text-white transition"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
+                </div>
+
+                {/* Messages */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-white/10">
+                    {messages.map((msg, idx) => (
+                        <div key={idx} className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                            <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-[#1A1A1A] text-gray-200 border border-white/5 rounded-bl-none'}`}>
+                                {msg.text}
+                            </div>
+                        </div>
+                    ))}
+                    {isTyping && (
+                        <div className="flex w-full justify-start">
+                            <div className="max-w-[85%] rounded-2xl px-4 py-3 bg-[#1A1A1A] border border-white/5 rounded-bl-none flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
+                                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></span>
+                                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></span>
+                            </div>
+                        </div>
+                    )}
+                    <div ref={messagesEndRef} />
+                </div>
+
+                {/* Input Area */}
+                <div className="p-3 border-t border-white/5 bg-[#0A0A0A] flex-shrink-0">
+                    <form onSubmit={handleSendMessage} className="relative flex items-center">
+                        <input 
+                            type="text" 
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.target.value)}
+                            placeholder="Ask about Gavblue..."
+                            className="w-full bg-[#111] border border-white/10 text-white text-sm rounded-xl pl-4 pr-12 py-3 outline-none focus:border-blue-500 transition-colors"
+                        />
+                        <button 
+                            type="submit" 
+                            disabled={!inputValue.trim() || isTyping}
+                            className="absolute right-2 w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white hover:bg-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 translate-x-px -translate-y-px"><path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" /></svg>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </>
+    );
+};
+// ============================================================================
+
+
 export default function Home() {
   const [scrolled, setScrolled] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -131,7 +333,8 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-blue-600 selection:text-white overflow-x-hidden relative cursor-default">
+    // FIX: ADDED w-full max-w-[100vw] overflow-hidden here to strictly prevent mobile side gaps
+    <div className="min-h-screen w-full max-w-[100vw] bg-[#050505] text-white font-sans selection:bg-blue-600 selection:text-white overflow-hidden relative cursor-default">
       
       {/* CSS FOR SEAMLESS MARQUEE & PAUSE */}
       <style jsx global>{`
@@ -154,7 +357,7 @@ export default function Home() {
       ></div>
 
       {/* --- NAVIGATION BAR --- */}
-      <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? 'bg-[#050505]/95 backdrop-blur-xl border-b border-white/5 py-4' : 'bg-transparent py-6'}`}>
+      <nav className={`fixed w-full max-w-[100vw] z-50 transition-all duration-300 ${scrolled ? 'bg-[#050505]/95 backdrop-blur-xl border-b border-white/5 py-4' : 'bg-transparent py-6'}`}>
         <div className="max-w-7xl mx-auto px-6 lg:px-8 flex items-center justify-between relative">
           
           {/* Logo */}
@@ -315,8 +518,8 @@ export default function Home() {
       </nav>
 
       {/* --- HERO SECTION --- */}
-      <section className="relative pt-40 pb-20 md:pt-48 md:pb-32 overflow-hidden z-10">
-        <div className="absolute inset-0 z-0 pointer-events-none">
+      <section className="relative pt-40 pb-20 md:pt-48 md:pb-32 overflow-hidden z-10 w-full">
+        <div className="absolute inset-0 z-0 pointer-events-none w-full">
            <img src="/hero-bg.jpg" alt="Bull and Bear Background" className="w-full h-full object-cover opacity-60" />
            <div className="absolute inset-0 bg-gradient-to-b from-[#050505]/80 via-transparent to-[#050505]"></div>
         </div>
@@ -346,16 +549,16 @@ export default function Home() {
       </section>
 
       {/* --- BONUS BANNER --- */}
-      <section className="relative z-20 -mt-8 md:-mt-10 mb-20">
+      <section className="relative z-20 -mt-8 md:-mt-10 mb-20 w-full">
         <div className="max-w-5xl mx-auto px-6">
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-yellow-600/20 via-yellow-500/10 to-transparent border border-yellow-500/30 p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 backdrop-blur-md">
-            <div className="text-center md:text-left z-10">
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-yellow-600/20 via-yellow-500/10 to-transparent border border-yellow-500/30 p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 backdrop-blur-md w-full">
+            <div className="text-center md:text-left z-10 w-full md:w-auto">
               <span className="inline-block px-3 py-1 bg-yellow-500/20 text-yellow-400 text-xs font-bold uppercase tracking-wider rounded-md mb-2">Limited Offer</span>
               <h3 className="text-2xl md:text-3xl font-bold text-white">200% First Deposit Bonus</h3>
               <p className="text-gray-400 mt-1 text-sm md:text-base">Double your trading power instantly. Valid for new accounts only.</p>
             </div>
             
-            <div className="flex flex-col items-center md:items-end z-10 gap-3 w-full md:w-auto">
+            <div className="flex flex-col items-center md:items-end z-10 gap-3 w-full md:w-auto flex-shrink-0">
                 <Link 
                     href="/login?view=signup" 
                     className="w-full md:w-auto px-8 py-3 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-lg shadow-lg shadow-yellow-500/20 transition-transform hover:scale-105 whitespace-nowrap text-center"
@@ -364,7 +567,7 @@ export default function Home() {
                 </Link>
                 <Link 
                     href="/login?view=signup" 
-                    className="text-[10px] text-yellow-400/80 hover:text-white underline decoration-dashed underline-offset-4 transition"
+                    className="text-[10px] text-yellow-400/80 hover:text-white underline decoration-dashed underline-offset-4 transition text-center"
                 >
                     Create a new account to claim
                 </Link>
@@ -374,24 +577,24 @@ export default function Home() {
       </section>
 
       {/* --- LIVE MARKET TAPE --- */}
-      <div className="border-y border-white/5 bg-[#0A0A0A]/50 backdrop-blur-sm z-10 relative">
+      <div className="border-y border-white/5 bg-[#0A0A0A]/50 backdrop-blur-sm z-10 relative w-full">
         <div id="tradingview-widget" ref={tickerTapeRef} className="tradingview-widget-container"></div>
       </div>
 
       {/* --- NEW REAL-TIME MARKET WATCH SECTION --- */}
-      <section className="py-32 bg-[#0A0A0A] border-b border-white/5 relative z-10">
-        <div className="max-w-7xl mx-auto px-6">
+      <section className="py-32 bg-[#0A0A0A] border-b border-white/5 relative z-10 w-full">
+        <div className="max-w-7xl mx-auto px-6 w-full">
           <div className="text-center mb-16">
               <h2 className="text-3xl md:text-5xl font-bold mb-4">Live <span className="text-blue-500">Markets</span></h2>
               <p className="text-gray-400">Real-time pricing from global liquidity providers.</p>
           </div>
-          <div className="tradingview-widget-container rounded-2xl overflow-hidden border border-white/5" ref={marketOverviewRef}></div>
+          <div className="tradingview-widget-container rounded-2xl overflow-hidden border border-white/5 w-full" ref={marketOverviewRef}></div>
         </div>
       </section>
 
       {/* --- PLATFORMS SECTION --- */}
-      <section className="py-20 md:py-32 bg-[#050505] relative z-10">
-        <div className="max-w-7xl mx-auto px-6">
+      <section className="py-20 md:py-32 bg-[#050505] relative z-10 w-full">
+        <div className="max-w-7xl mx-auto px-6 w-full">
           <div className="text-center mb-16 md:mb-20">
             <h2 className="text-4xl md:text-5xl font-bold mb-6">Level Up With Our <span className="text-blue-500">Platforms</span></h2>
             <p className="text-gray-400 max-w-xl mx-auto text-lg">
@@ -399,8 +602,8 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="col-span-1 md:col-span-2 p-6 md:p-10 rounded-3xl bg-[#0A0A0A] border border-white/5 hover:border-blue-500/50 transition-all group relative overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
+            <div className="col-span-1 md:col-span-2 p-6 md:p-10 rounded-3xl bg-[#0A0A0A] border border-white/5 hover:border-blue-500/50 transition-all group relative overflow-hidden w-full">
                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-[50px]"></div>
                <h3 className="text-2xl font-bold text-white mb-2">Gavblue WebTrader</h3>
                <p className="text-gray-400 mb-6">Analyze the markets with our powerful, built-in charting platform.</p>
@@ -409,7 +612,7 @@ export default function Home() {
                </div>
             </div>
 
-            <div className="p-8 md:p-10 rounded-3xl bg-[#0A0A0A] border border-white/5 hover:border-white/20 transition-all group">
+            <div className="p-8 md:p-10 rounded-3xl bg-[#0A0A0A] border border-white/5 hover:border-white/20 transition-all group w-full">
                <h3 className="text-2xl font-bold text-white mb-2">TradingView Integration</h3>
                <p className="text-gray-400 mb-6">Connect your account and trade directly from TradingView.com.</p>
                <div className="flex flex-wrap items-center gap-3 md:gap-4 text-gray-500">
@@ -418,7 +621,7 @@ export default function Home() {
                </div>
             </div>
 
-            <div className="p-8 md:p-10 rounded-3xl bg-[#0A0A0A] border border-white/5 hover:border-green-500/30 transition-all group flex flex-col justify-between">
+            <div className="p-8 md:p-10 rounded-3xl bg-[#0A0A0A] border border-white/5 hover:border-green-500/30 transition-all group flex flex-col justify-between w-full">
                <div>
                  <h3 className="text-2xl font-bold text-white mb-4">MetaTrader 4 & 5</h3>
                  <p className="text-gray-400 text-lg mb-8">The industry standard for algorithmic trading and EAs.</p>
@@ -433,8 +636,8 @@ export default function Home() {
       </section>
 
       {/* --- LIVE STATS --- */}
-      <section className="py-32 bg-[#050505] border-t border-white/5 relative z-10">
-        <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 text-center">
+      <section className="py-32 bg-[#050505] border-t border-white/5 relative z-10 w-full">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 text-center w-full">
           <div className="group cursor-default hover:bg-white/5 p-4 md:p-6 rounded-xl transition-all">
             <div className="text-3xl md:text-5xl font-bold text-white mb-2 font-mono">${stats.volume ? stats.volume.toFixed(2) : '0.00'}B+</div>
             <div className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest">24h Volume</div>
@@ -455,8 +658,8 @@ export default function Home() {
       </section>
 
       {/* --- 4. PARTNERS SECTION --- */}
-      <section className="py-24 border-t border-white/5 bg-black z-10 relative overflow-hidden group">
-        <div className="max-w-4xl mx-auto px-6">
+      <section className="py-24 border-t border-white/5 bg-black z-10 relative overflow-hidden group w-full">
+        <div className="max-w-4xl mx-auto px-6 w-full">
           <p className="text-gray-600 text-xs uppercase tracking-widest mb-12 text-center font-bold">Official Trading Partners</p>
           
           <div className="relative w-full overflow-hidden mask-gradient-x">
@@ -514,9 +717,9 @@ export default function Home() {
       </section>
 
       {/* --- FOOTER (MOBILE OPTIMIZED: SIDE-BY-SIDE LISTS) --- */}
-      <footer className="border-t border-white/5 bg-black py-16 md:py-20 relative z-10">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row gap-12 mb-16">
+      <footer className="border-t border-white/5 bg-black py-16 md:py-20 relative z-10 w-full">
+        <div className="max-w-7xl mx-auto px-6 w-full">
+          <div className="flex flex-col md:flex-row gap-12 mb-16 w-full">
             
             {/* LOGO & DESC - Top on Mobile, Left on Desktop */}
             <div className="w-full md:w-1/4">
@@ -558,7 +761,7 @@ export default function Home() {
             </div>
           </div>
           
-          <div className="border-t border-white/5 pt-10 text-center">
+          <div className="border-t border-white/5 pt-10 text-center w-full">
             <p className="text-gray-800 text-[10px] leading-relaxed max-w-4xl mx-auto">
               Risk Warning: CFDs are complex instruments and come with a high risk of losing money rapidly due to leverage. 
               74-89% of retail investor accounts lose money when trading CFDs with this provider. 
@@ -570,6 +773,8 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      <AiSupportChat />
 
     </div>
   );
