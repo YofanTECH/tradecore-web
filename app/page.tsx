@@ -4,6 +4,31 @@ import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 
 // ============================================================================
+// TELEGRAM SUPPORT COMPONENT (NEW)
+// ============================================================================
+const TelegramSupport = () => {
+    return (
+        <a
+            href="https://t.me/GavBlue"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ left: '30px', bottom: '30px' }}
+            className="fixed z-[100] w-12 h-12 md:w-14 md:h-14 bg-white rounded-full shadow-[0_4px_20px_rgba(42,171,238,0.4)] flex items-center justify-center hover:scale-110 transition-transform active:scale-95 group overflow-hidden"
+            title="Join our Telegram Group"
+        >
+            <svg 
+                className="w-full h-full text-[#2AABEE]" 
+                fill="currentColor" 
+                viewBox="0 0 24 24" 
+                xmlns="http://www.w3.org/2000/svg"
+            >
+                <path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.56 8.16l-1.92 9.06c-.15.68-.55.84-1.12.52l-3.1-2.28-1.5 1.44c-.16.16-.3.3-.61.3l.22-3.15 5.73-5.18c.25-.22-.05-.35-.38-.13l-7.08 4.46-3.05-.96c-.66-.2-.68-.66.14-.98l11.9-4.58c.55-.2.1 0 1.05.3.36.1.55.54.44.98z"/>
+            </svg>
+        </a>
+    );
+};
+
+// ============================================================================
 // AI SUPPORT CHAT COMPONENT (WITH LIVE CONNECTION SIMULATION)
 // ============================================================================
 const AGENT_NAMES = ["Elena", "Liam", "Sofia", "Mateo", "Yuki", "Amara", "Julian", "Chloe", "Kael", "Anya"];
@@ -823,6 +848,8 @@ export default function Home() {
         </div>
       </footer>
 
+      {/* RENDER BOTH CHAT AND TELEGRAM */}
+      <TelegramSupport />
       <AiSupportChat />
 
     </div>
