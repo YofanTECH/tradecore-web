@@ -4,6 +4,241 @@ import { useEffect, useState, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/app/utils/supabase/client';
 
+// ============================================================================
+// AI SUPPORT CHAT COMPONENT (DASHBOARD VERSION)
+// ============================================================================
+const AGENT_NAMES = ["Elena", "Liam", "Sofia", "Mateo", "Yuki", "Amara", "Julian", "Chloe", "Kael", "Anya"];
+
+const AiSupportChat = () => {
+    const [position, setPosition] = useState({ x: 30, y: 30 }); 
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+    const [hasMoved, setHasMoved] = useState(false);
+    
+    const [isOpen, setIsOpen] = useState(false);
+    const [agentName, setAgentName] = useState('Support');
+    
+    // Connection Simulation States
+    const [isConnecting, setIsConnecting] = useState(false);
+    const [hasConnected, setHasConnected] = useState(false);
+
+    const [messages, setMessages] = useState<{role: 'ai'|'user', text: string}[]>([]);
+    const [inputValue, setInputValue] = useState('');
+    const [isTyping, setIsTyping] = useState(false);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    // Pick a random agent name on mount
+    useEffect(() => {
+        const randomName = AGENT_NAMES[Math.floor(Math.random() * AGENT_NAMES.length)];
+        setAgentName(randomName);
+    }, []);
+
+    // LIVE CONNECTION SIMULATION
+    useEffect(() => {
+        if (isOpen && !hasConnected && !isConnecting) {
+            setIsConnecting(true);
+            
+            // Step 1: Simulate network connection routing (2 seconds)
+            setTimeout(() => {
+                setIsConnecting(false);
+                setHasConnected(true);
+                setIsTyping(true); // Step 2: Agent starts typing
+                
+                // Step 3: Send initial greeting (1.2 seconds later)
+                setTimeout(() => {
+                    setMessages([
+                        { role: 'ai', text: `Hello! My name is ${agentName}, your dedicated Gavblue Trading Specialist. How can I help you navigate your dashboard today?` }
+                    ]);
+                    setIsTyping(false);
+                }, 1200);
+
+            }, 2000);
+        }
+    }, [isOpen, hasConnected, isConnecting, agentName]);
+
+    // Auto-scroll to bottom of chat
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [messages, isTyping, hasConnected]);
+
+    // Dragging Logic
+    const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
+        setIsDragging(true);
+        setHasMoved(false);
+        const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+        const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+        setDragStart({ x: clientX, y: clientY });
+    };
+
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent | TouchEvent) => {
+            if (!isDragging) return;
+            const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+            const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+            
+            const dx = dragStart.x - clientX;
+            const dy = dragStart.y - clientY;
+
+            if (Math.abs(dx) > 5 || Math.abs(dy) > 5) setHasMoved(true);
+
+            setPosition((prev) => ({
+                x: Math.max(10, Math.min(window.innerWidth - 60, prev.x + dx)),
+                y: Math.max(10, Math.min(window.innerHeight - 60, prev.y + dy)),
+            }));
+            setDragStart({ x: clientX, y: clientY });
+        };
+
+        const handleMouseUp = () => setIsDragging(false);
+
+        if (isDragging) {
+            window.addEventListener('mousemove', handleMouseMove);
+            window.addEventListener('touchmove', handleMouseMove, { passive: false });
+            window.addEventListener('mouseup', handleMouseUp);
+            window.addEventListener('touchend', handleMouseUp);
+        }
+
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('touchmove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+            window.removeEventListener('touchend', handleMouseUp);
+        };
+    }, [isDragging, dragStart]);
+
+    const handleClick = () => {
+        if (!hasMoved) setIsOpen(!isOpen);
+    };
+
+    // --- REAL AI INTEGRATION LOGIC ---
+    const handleSendMessage = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!inputValue.trim() || !hasConnected) return;
+
+        const userMsg = inputValue.trim();
+        const newMessages = [...messages, { role: 'user' as const, text: userMsg }];
+        setMessages(newMessages);
+        setInputValue('');
+        setIsTyping(true);
+
+        try {
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    message: userMsg,
+                    history: messages,
+                    agentName: agentName
+                }),
+            });
+
+            if (!response.ok) throw new Error('Network response was not ok');
+            
+            const data = await response.json();
+            setMessages(prev => [...prev, { role: 'ai', text: data.reply }]);
+        } catch (error) {
+            console.error("Chat error:", error);
+            setMessages(prev => [...prev, { role: 'ai', text: "I'm having a slight connection issue right now, but Gavblue's trading servers are fully operational! Please try asking again in a moment." }]);
+        } finally {
+            setIsTyping(false);
+        }
+    };
+
+    return (
+        <>
+            <div
+                onMouseDown={handleMouseDown}
+                onTouchStart={handleMouseDown}
+                onClick={handleClick}
+                style={{ right: `${position.x}px`, bottom: `${position.y}px`, cursor: isDragging ? 'grabbing' : 'pointer', touchAction: 'none' }}
+                className="fixed z-[100] w-14 h-14 md:w-16 md:h-16 bg-[#FFE600] rounded-full shadow-[0_4px_20px_rgba(255,230,0,0.4)] flex items-center justify-center hover:scale-110 transition-transform active:scale-95 group"
+            >
+                 {isOpen ? (
+                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6 text-black"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                 ) : (
+                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-7 h-7 md:w-8 md:h-8 text-black"><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" /></svg>
+                 )}
+                 {!isOpen && (
+                    <span className="absolute -top-1 -right-1 flex h-3 w-3 md:h-4 md:w-4">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 md:h-4 md:w-4 bg-blue-500 border-2 border-black"></span>
+                    </span>
+                 )}
+            </div>
+
+            <div className={`fixed bottom-24 right-4 md:right-10 w-[calc(100vw-32px)] md:w-[380px] h-[500px] bg-[#0A0A0A] border border-white/10 rounded-2xl shadow-2xl flex flex-col z-[110] transition-all duration-300 origin-bottom-right overflow-hidden ${isOpen ? 'scale-100 opacity-100 visible' : 'scale-90 opacity-0 invisible pointer-events-none'}`}>
+                <div className="h-16 bg-[#111] border-b border-white/5 flex items-center px-4 justify-between flex-shrink-0">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
+                            {hasConnected ? agentName.charAt(0) : <span className="animate-pulse">...</span>}
+                        </div>
+                        <div>
+                            <h3 className="text-white font-bold text-sm">{hasConnected ? `${agentName} - Gavblue Support` : 'Gavblue Support'}</h3>
+                            <p className="text-[10px] text-gray-400 flex items-center gap-1">
+                                {hasConnected ? (
+                                    <><span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block"></span> Online</>
+                                ) : (
+                                    <><span className="w-1.5 h-1.5 rounded-full bg-yellow-500 inline-block animate-pulse"></span> Connecting...</>
+                                )}
+                            </p>
+                        </div>
+                    </div>
+                    <button onClick={() => setIsOpen(false)} className="text-gray-500 hover:text-white transition"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-white/10">
+                    {!hasConnected ? (
+                        <div className="flex flex-col items-center justify-center h-full space-y-4 opacity-70">
+                            <div className="w-10 h-10 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+                            <p className="text-[10px] text-blue-500 font-bold uppercase tracking-widest animate-pulse">Connecting to Agent...</p>
+                        </div>
+                    ) : (
+                        <>
+                            {messages.map((msg, idx) => (
+                                <div key={idx} className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                    <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-[#1A1A1A] text-gray-200 border border-white/5 rounded-bl-none'}`}>
+                                        {msg.text}
+                                    </div>
+                                </div>
+                            ))}
+                            {isTyping && (
+                                <div className="flex w-full justify-start">
+                                    <div className="max-w-[85%] rounded-2xl px-4 py-3 bg-[#1A1A1A] border border-white/5 rounded-bl-none flex items-center gap-1.5">
+                                        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
+                                        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></span>
+                                        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></span>
+                                    </div>
+                                </div>
+                            )}
+                        </>
+                    )}
+                    <div ref={messagesEndRef} />
+                </div>
+
+                <div className="p-3 border-t border-white/5 bg-[#0A0A0A] flex-shrink-0">
+                    <form onSubmit={handleSendMessage} className="relative flex items-center">
+                        <input 
+                            type="text" 
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.target.value)}
+                            disabled={!hasConnected || isTyping}
+                            placeholder={hasConnected ? `Reply to ${agentName}...` : "Please wait..."}
+                            className="w-full bg-[#111] border border-white/10 text-white text-sm rounded-xl pl-4 pr-12 py-3 outline-none focus:border-blue-500 transition-colors disabled:opacity-50"
+                        />
+                        <button 
+                            type="submit" 
+                            disabled={!inputValue.trim() || isTyping || !hasConnected}
+                            className="absolute right-2 w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white hover:bg-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 translate-x-px -translate-y-px"><path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" /></svg>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </>
+    );
+};
+// ============================================================================
+
 // --- TYPES ---
 type Account = {
   id: string;
@@ -78,18 +313,19 @@ const BONUSES = [
   }
 ];
 
+// UPDATED: Replaced emoji text icons with realistic SVG paths for crypto and fiat!
 const PAYMENT_METHODS = [
-  { id: 'btc', name: 'Bitcoin (BTC)', type: 'crypto', icon: '₿', color: 'text-orange-500', bg: 'bg-orange-500/10', time: 'Instant', limit: '50 - 200k', address: 'bc1qshcgsytuknsa6snremp80azdn6vjrudtsv6pg2' },
-  { id: 'usdt_trc20', name: 'Tether (USDT TRC20)', type: 'crypto', icon: 'T', color: 'text-green-500', bg: 'bg-green-500/10', time: '5 mins', limit: '50 - 200k', address: 'TJmjDXa7q4tNTZMij8hPXvghj1LrRkFf8V' },
-  { id: 'trx', name: 'TRON (TRX)', type: 'crypto', icon: '♦', color: 'text-red-500', bg: 'bg-red-500/10', time: '5 mins', limit: '50 - 200k', address: 'TJmjDXa7q4tNTZMij8hPXvghj1LrRkFf8V' },
-  { id: 'eth', name: 'Ethereum (ETH)', type: 'crypto', icon: 'Ξ', color: 'text-purple-500', bg: 'bg-purple-500/10', time: '15 mins', limit: '50 - 200k', address: '0x836877b56054434f5be5c97c19809fd7ad08006a' },
-  { id: 'usdt_erc20', name: 'Tether (USDT ERC20)', type: 'crypto', icon: 'T', color: 'text-green-500', bg: 'bg-green-500/10', time: '15 mins', limit: '50 - 200k', address: '0x836877b56054434f5be5c97c19809fd7ad08006a' },
-  { id: 'usdc_erc20', name: 'USD Coin (USDC ERC20)', type: 'crypto', icon: '$', color: 'text-blue-500', bg: 'bg-blue-500/10', time: '15 mins', limit: '50 - 200k', address: '0x836877b56054434f5be5c97c19809fd7ad08006a' },
-  { id: 'usdt_bep20', name: 'Tether (USDT BEP20)', type: 'crypto', icon: 'T', color: 'text-green-500', bg: 'bg-green-500/10', time: '5 mins', limit: '50 - 200k', address: '0x836877b56054434f5be5c97c19809fd7ad08006a' },
-  { id: 'usdc_bep20', name: 'USD Coin (USDC BEP20)', type: 'crypto', icon: '$', color: 'text-blue-500', bg: 'bg-blue-500/10', time: '5 mins', limit: '50 - 200k', address: '0x836877b56054434f5be5c97c19809fd7ad08006a' },
-  { id: 'card', name: 'MasterCard / Visa', type: 'fiat', icon: '💳', color: 'text-white', bg: 'bg-white/10', time: 'Instant', limit: '50 - 10k', status: 'soon' },
-  { id: 'paypal', name: 'PayPal', type: 'fiat', icon: 'P', color: 'text-blue-400', bg: 'bg-blue-500/10', time: 'Instant', limit: '50 - 5k', status: 'soon' },
-  { id: 'bank', name: 'International Bank Wire', type: 'fiat', icon: '🏦', color: 'text-gray-300', bg: 'bg-white/5', time: '3-5 Days', limit: '500 - 500k', status: 'soon' },
+  { id: 'btc', name: 'Bitcoin (BTC)', type: 'crypto', icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 md:w-6 md:h-6"><path d="M12 0a12 12 0 1 0 0 24 12 12 0 0 0 0-24zm3.9 12.3c0 2.5-2.1 3.7-5.1 3.7H8.5V7.6h2.5V6.1h1.5v1.5h1.3V6.1h1.5v1.6c2.7 0 4.5 1.1 4.5 3.3 0 1.4-0.8 2.3-1.9 2.8 1.4 0.4 2.2 1.4 2.2 2.8zM11 9.4h1.3c1 0 1.6 0.3 1.6 1.1 0 0.9-0.6 1.2-1.6 1.2H11V9.4zm1.5 5.2H11v-2.5h1.5c1.2 0 1.8 0.4 1.8 1.3 0 1-0.6 1.3-1.8 1.3z"/></svg>, color: 'text-[#F7931A]', bg: 'bg-[#F7931A]/10', time: 'Instant', limit: '50 - 200k', address: 'bc1qshcgsytuknsa6snremp80azdn6vjrudtsv6pg2' },
+  { id: 'usdt_trc20', name: 'Tether (USDT TRC20)', type: 'crypto', icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 md:w-6 md:h-6"><path d="M12 0a12 12 0 1 0 0 24 12 12 0 0 0 0-24zm0 18.2c-4 0-7.2-1.2-7.2-2.7 0-1.1 1.7-2.1 4.2-2.5v-2.3H6.7V9.2h2.3V7.6c0-1.8 1.2-2.6 3-2.6 1.3 0 2.2 0.3 2.2 0.3l-0.3 1.6s-0.7-0.2-1.4-0.2c-0.8 0-1.1 0.4-1.1 1v1.5h2.8v1.5h-2.8v2.3c2.5 0.4 4.2 1.4 4.2 2.5 0 1.5-3.2 2.7-7.2 2.7z"/></svg>, color: 'text-[#26A17B]', bg: 'bg-[#26A17B]/10', time: '5 mins', limit: '50 - 200k', address: 'TJmjDXa7q4tNTZMij8hPXvghj1LrRkFf8V' },
+  { id: 'trx', name: 'TRON (TRX)', type: 'crypto', icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 md:w-6 md:h-6"><path d="M12 0a12 12 0 1 0 0 24 12 12 0 0 0 0-24zm5.5 16.5L12 20l-5.5-3.5L12 4l5.5 12.5z"/></svg>, color: 'text-[#FF060A]', bg: 'bg-[#FF060A]/10', time: '5 mins', limit: '50 - 200k', address: 'TJmjDXa7q4tNTZMij8hPXvghj1LrRkFf8V' },
+  { id: 'eth', name: 'Ethereum (ETH)', type: 'crypto', icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 md:w-6 md:h-6"><path d="M12 0a12 12 0 1 0 0 24 12 12 0 0 0 0-24zm-0.1 4.5l5.2 8.6-5.2 3.1-5.2-3.1 5.2-8.6zm0 13.3l-5.2-7.3 5.2 3.1 5.2-3.1-5.2 7.3z"/></svg>, color: 'text-[#627EEA]', bg: 'bg-[#627EEA]/10', time: '15 mins', limit: '50 - 200k', address: '0x836877b56054434f5be5c97c19809fd7ad08006a' },
+  { id: 'usdt_erc20', name: 'Tether (USDT ERC20)', type: 'crypto', icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 md:w-6 md:h-6"><path d="M12 0a12 12 0 1 0 0 24 12 12 0 0 0 0-24zm0 18.2c-4 0-7.2-1.2-7.2-2.7 0-1.1 1.7-2.1 4.2-2.5v-2.3H6.7V9.2h2.3V7.6c0-1.8 1.2-2.6 3-2.6 1.3 0 2.2 0.3 2.2 0.3l-0.3 1.6s-0.7-0.2-1.4-0.2c-0.8 0-1.1 0.4-1.1 1v1.5h2.8v1.5h-2.8v2.3c2.5 0.4 4.2 1.4 4.2 2.5 0 1.5-3.2 2.7-7.2 2.7z"/></svg>, color: 'text-[#26A17B]', bg: 'bg-[#26A17B]/10', time: '15 mins', limit: '50 - 200k', address: '0x836877b56054434f5be5c97c19809fd7ad08006a' },
+  { id: 'usdc_erc20', name: 'USD Coin (USDC ERC20)', type: 'crypto', icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 md:w-6 md:h-6"><path d="M12 0a12 12 0 1 0 0 24 12 12 0 0 0 0-24zm2.8 14.8c-0.9 0.7-2 1.1-3.2 1.1-3.1 0-5.6-2.5-5.6-5.6s2.5-5.6 5.6-5.6c1.3 0 2.5 0.4 3.4 1.2l-1.6 1.6c-0.5-0.4-1.1-0.7-1.8-0.7-1.8 0-3.3 1.5-3.3 3.3s1.5 3.3 3.3 3.3c0.8 0 1.5-0.3 2-0.8l1.2 1.8z"/></svg>, color: 'text-[#2775CA]', bg: 'bg-[#2775CA]/10', time: '15 mins', limit: '50 - 200k', address: '0x836877b56054434f5be5c97c19809fd7ad08006a' },
+  { id: 'usdt_bep20', name: 'Tether (USDT BEP20)', type: 'crypto', icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 md:w-6 md:h-6"><path d="M12 0a12 12 0 1 0 0 24 12 12 0 0 0 0-24zm0 18.2c-4 0-7.2-1.2-7.2-2.7 0-1.1 1.7-2.1 4.2-2.5v-2.3H6.7V9.2h2.3V7.6c0-1.8 1.2-2.6 3-2.6 1.3 0 2.2 0.3 2.2 0.3l-0.3 1.6s-0.7-0.2-1.4-0.2c-0.8 0-1.1 0.4-1.1 1v1.5h2.8v1.5h-2.8v2.3c2.5 0.4 4.2 1.4 4.2 2.5 0 1.5-3.2 2.7-7.2 2.7z"/></svg>, color: 'text-[#26A17B]', bg: 'bg-[#26A17B]/10', time: '5 mins', limit: '50 - 200k', address: '0x836877b56054434f5be5c97c19809fd7ad08006a' },
+  { id: 'usdc_bep20', name: 'USD Coin (USDC BEP20)', type: 'crypto', icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 md:w-6 md:h-6"><path d="M12 0a12 12 0 1 0 0 24 12 12 0 0 0 0-24zm2.8 14.8c-0.9 0.7-2 1.1-3.2 1.1-3.1 0-5.6-2.5-5.6-5.6s2.5-5.6 5.6-5.6c1.3 0 2.5 0.4 3.4 1.2l-1.6 1.6c-0.5-0.4-1.1-0.7-1.8-0.7-1.8 0-3.3 1.5-3.3 3.3s1.5 3.3 3.3 3.3c0.8 0 1.5-0.3 2-0.8l1.2 1.8z"/></svg>, color: 'text-[#2775CA]', bg: 'bg-[#2775CA]/10', time: '5 mins', limit: '50 - 200k', address: '0x836877b56054434f5be5c97c19809fd7ad08006a' },
+  { id: 'card', name: 'MasterCard / Visa', type: 'fiat', icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 md:w-6 md:h-6"><path d="M2.25 6A2.25 2.25 0 0 0 0 8.25v7.5A2.25 2.25 0 0 0 2.25 18h19.5A2.25 2.25 0 0 0 24 15.75v-7.5A2.25 2.25 0 0 0 21.75 6H2.25ZM2.25 9h19.5v1.5H2.25V9Zm0 4.5h19.5v2.25H2.25v-2.25Z"/></svg>, color: 'text-white', bg: 'bg-white/10', time: 'Instant', limit: '50 - 10k', status: 'soon' },
+  { id: 'paypal', name: 'PayPal', type: 'fiat', icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 md:w-6 md:h-6"><path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944 3.09a.636.636 0 0 1 .627-.533h7.247c3.96 0 5.626 1.815 5.253 4.542-.423 3.102-2.316 4.93-5.32 5.37l-.146.015c-.23.018-.466.024-.707.024H8.78a.494.494 0 0 0-.488.406l-1.216 8.423z"/></svg>, color: 'text-[#00457C]', bg: 'bg-[#00457C]/10', time: 'Instant', limit: '50 - 5k', status: 'soon' },
+  { id: 'bank', name: 'International Bank Wire', type: 'fiat', icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 md:w-6 md:h-6"><path d="M2 21h20v2H2v-2zm2-2V9H2v10h2zm16 0V9h-2v10h2zm-12 0V9H6v10h2zm4 0V9h-2v10h2zm4 0V9h-2v10h2zM12 2L2 7h20L12 2z"/></svg>, color: 'text-gray-300', bg: 'bg-white/5', time: '3-5 Days', limit: '500 - 500k', status: 'soon' },
 ];
 
 const FAQS = [
@@ -1296,6 +1532,26 @@ export default function Dashboard() {
                             <h3 className="text-white font-bold text-lg md:text-xl mb-2">No Active Accounts</h3>
                             <p className="text-gray-400 text-xs md:text-sm max-w-xs md:max-w-sm mb-6 leading-relaxed">Open a real account by making a minimum deposit of $50 to start trading.</p>
                             <button onClick={() => setActivePage('deposit')} className="text-blue-500 hover:text-blue-400 font-bold text-xs md:text-sm flex items-center gap-1 transition">Deposit to Start <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg></button>
+
+                            {/* ADDED PLATFORM INFO HERE */}
+                            <div className="mt-8 border-t border-white/5 pt-6 grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-2xl text-[10px] md:text-xs text-gray-500">
+                                <div className="flex flex-col items-center">
+                                    <span className="text-white font-bold mb-1">0.0 Pips</span>
+                                    Raw Spreads
+                                </div>
+                                <div className="flex flex-col items-center">
+                                    <span className="text-white font-bold mb-1">1:1000</span>
+                                    Max Leverage
+                                </div>
+                                <div className="flex flex-col items-center">
+                                    <span className="text-white font-bold mb-1">0% Fees</span>
+                                    Crypto Funding
+                                </div>
+                                <div className="flex flex-col items-center">
+                                    <span className="text-white font-bold mb-1">MT4 & MT5</span>
+                                    Full Support
+                                </div>
+                            </div>
                         </div>
                     ) : (
                         <div className="space-y-4 md:space-y-6">
@@ -1409,8 +1665,9 @@ export default function Dashboard() {
         </div>
       </main>
       
-      {/* Draggable Support Button remains perfectly intact below */}
-      <DraggableSupportButton />
+      {/* ADDED AI SUPPORT COMPONENT HERE */}
+      <AiSupportChat />
+
     </div>
   );
 }
@@ -1436,83 +1693,3 @@ function SidebarItem({ icon, label, active, onClick, isExternal }: { icon: strin
         </button>
     );
 }
-
-const DraggableSupportButton = () => {
-    const [position, setPosition] = useState({ x: 30, y: 30 }); // Bottom-Right offset
-    const [isDragging, setIsDragging] = useState(false);
-    const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-    const [hasMoved, setHasMoved] = useState(false); // Track if it was a click or a drag
-
-    const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
-        setIsDragging(true);
-        setHasMoved(false);
-        const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-        const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-        setDragStart({ x: clientX, y: clientY });
-    };
-
-    useEffect(() => {
-        const handleMouseMove = (e: MouseEvent | TouchEvent) => {
-            if (!isDragging) return;
-            const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-            const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-            
-            const dx = dragStart.x - clientX;
-            const dy = dragStart.y - clientY;
-
-            // If moved more than 5px, consider it a drag
-            if (Math.abs(dx) > 5 || Math.abs(dy) > 5) setHasMoved(true);
-
-            setPosition((prev) => ({
-                x: Math.max(10, Math.min(window.innerWidth - 60, prev.x + dx)),
-                y: Math.max(10, Math.min(window.innerHeight - 60, prev.y + dy)),
-            }));
-            setDragStart({ x: clientX, y: clientY });
-        };
-
-        const handleMouseUp = () => {
-            setIsDragging(false);
-        };
-
-        if (isDragging) {
-            window.addEventListener('mousemove', handleMouseMove);
-            window.addEventListener('touchmove', handleMouseMove, { passive: false });
-            window.addEventListener('mouseup', handleMouseUp);
-            window.addEventListener('touchend', handleMouseUp);
-        }
-
-        return () => {
-            window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('touchmove', handleMouseMove);
-            window.removeEventListener('mouseup', handleMouseUp);
-            window.removeEventListener('touchend', handleMouseUp);
-        };
-    }, [isDragging, dragStart]);
-
-    const handleClick = () => {
-        if (!hasMoved) {
-            window.open('https://t.me/SharkOperator_Group', '_blank');
-        }
-    };
-
-    return (
-        <div
-            onMouseDown={handleMouseDown}
-            onTouchStart={handleMouseDown}
-            onClick={handleClick}
-            style={{ 
-                right: `${position.x}px`, 
-                bottom: `${position.y}px`,
-                cursor: isDragging ? 'grabbing' : 'pointer',
-                touchAction: 'none' // Prevent pull-to-refresh while dragging
-            }}
-            className="fixed z-[100] w-12 h-12 md:w-14 md:h-14 bg-[#FFE600] rounded-full shadow-[0_4px_20px_rgba(255,230,0,0.4)] flex items-center justify-center hover:scale-110 transition-transform active:scale-95 group"
-        >
-             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 md:w-7 md:h-7 text-black"><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 0 1-.825-.242m9.345-8.334a2.126 2.126 0 0 0-.476-.095 48.64 48.64 0 0 0-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0 0 11.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155" /></svg>
-             <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5 md:h-3 md:w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 md:h-3 md:w-3 bg-red-500"></span>
-            </span>
-        </div>
-    );
-};
