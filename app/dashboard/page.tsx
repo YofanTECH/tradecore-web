@@ -18,7 +18,6 @@ const AiSupportChat = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [agentName, setAgentName] = useState('Support');
     
-    // Connection Simulation States
     const [isConnecting, setIsConnecting] = useState(false);
     const [hasConnected, setHasConnected] = useState(false);
 
@@ -27,41 +26,32 @@ const AiSupportChat = () => {
     const [isTyping, setIsTyping] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    // Pick a random agent name on mount
     useEffect(() => {
         const randomName = AGENT_NAMES[Math.floor(Math.random() * AGENT_NAMES.length)];
         setAgentName(randomName);
     }, []);
 
-    // LIVE CONNECTION SIMULATION
     useEffect(() => {
         if (isOpen && !hasConnected && !isConnecting) {
             setIsConnecting(true);
-            
-            // Step 1: Simulate network connection routing (2 seconds)
             setTimeout(() => {
                 setIsConnecting(false);
                 setHasConnected(true);
-                setIsTyping(true); // Step 2: Agent starts typing
-                
-                // Step 3: Send initial greeting (1.2 seconds later)
+                setIsTyping(true); 
                 setTimeout(() => {
                     setMessages([
                         { role: 'ai', text: `Hello! My name is ${agentName}, your dedicated Gavblue Trading Specialist. How can I help you navigate your dashboard today?` }
                     ]);
                     setIsTyping(false);
                 }, 1200);
-
             }, 2000);
         }
     }, [isOpen, hasConnected, isConnecting, agentName]);
 
-    // Auto-scroll to bottom of chat
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages, isTyping, hasConnected]);
 
-    // Dragging Logic
     const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
         setIsDragging(true);
         setHasMoved(false);
@@ -109,7 +99,6 @@ const AiSupportChat = () => {
         if (!hasMoved) setIsOpen(!isOpen);
     };
 
-    // --- REAL AI INTEGRATION LOGIC ---
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!inputValue.trim() || !hasConnected) return;
@@ -237,7 +226,6 @@ const AiSupportChat = () => {
         </>
     );
 };
-// ============================================================================
 
 // --- TYPES ---
 type Account = {
@@ -313,19 +301,19 @@ const BONUSES = [
   }
 ];
 
-// UPDATED: Replaced emoji text icons with realistic SVG paths for crypto and fiat!
+// UPDATED: Using proper SVG file paths to avoid JSX type errors
 const PAYMENT_METHODS = [
-  { id: 'btc', name: 'Bitcoin (BTC)', type: 'crypto', icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 md:w-6 md:h-6"><path d="M12 0a12 12 0 1 0 0 24 12 12 0 0 0 0-24zm3.9 12.3c0 2.5-2.1 3.7-5.1 3.7H8.5V7.6h2.5V6.1h1.5v1.5h1.3V6.1h1.5v1.6c2.7 0 4.5 1.1 4.5 3.3 0 1.4-0.8 2.3-1.9 2.8 1.4 0.4 2.2 1.4 2.2 2.8zM11 9.4h1.3c1 0 1.6 0.3 1.6 1.1 0 0.9-0.6 1.2-1.6 1.2H11V9.4zm1.5 5.2H11v-2.5h1.5c1.2 0 1.8 0.4 1.8 1.3 0 1-0.6 1.3-1.8 1.3z"/></svg>, color: 'text-[#F7931A]', bg: 'bg-[#F7931A]/10', time: 'Instant', limit: '50 - 200k', address: 'bc1qshcgsytuknsa6snremp80azdn6vjrudtsv6pg2' },
-  { id: 'usdt_trc20', name: 'Tether (USDT TRC20)', type: 'crypto', icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 md:w-6 md:h-6"><path d="M12 0a12 12 0 1 0 0 24 12 12 0 0 0 0-24zm0 18.2c-4 0-7.2-1.2-7.2-2.7 0-1.1 1.7-2.1 4.2-2.5v-2.3H6.7V9.2h2.3V7.6c0-1.8 1.2-2.6 3-2.6 1.3 0 2.2 0.3 2.2 0.3l-0.3 1.6s-0.7-0.2-1.4-0.2c-0.8 0-1.1 0.4-1.1 1v1.5h2.8v1.5h-2.8v2.3c2.5 0.4 4.2 1.4 4.2 2.5 0 1.5-3.2 2.7-7.2 2.7z"/></svg>, color: 'text-[#26A17B]', bg: 'bg-[#26A17B]/10', time: '5 mins', limit: '50 - 200k', address: 'TJmjDXa7q4tNTZMij8hPXvghj1LrRkFf8V' },
-  { id: 'trx', name: 'TRON (TRX)', type: 'crypto', icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 md:w-6 md:h-6"><path d="M12 0a12 12 0 1 0 0 24 12 12 0 0 0 0-24zm5.5 16.5L12 20l-5.5-3.5L12 4l5.5 12.5z"/></svg>, color: 'text-[#FF060A]', bg: 'bg-[#FF060A]/10', time: '5 mins', limit: '50 - 200k', address: 'TJmjDXa7q4tNTZMij8hPXvghj1LrRkFf8V' },
-  { id: 'eth', name: 'Ethereum (ETH)', type: 'crypto', icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 md:w-6 md:h-6"><path d="M12 0a12 12 0 1 0 0 24 12 12 0 0 0 0-24zm-0.1 4.5l5.2 8.6-5.2 3.1-5.2-3.1 5.2-8.6zm0 13.3l-5.2-7.3 5.2 3.1 5.2-3.1-5.2 7.3z"/></svg>, color: 'text-[#627EEA]', bg: 'bg-[#627EEA]/10', time: '15 mins', limit: '50 - 200k', address: '0x836877b56054434f5be5c97c19809fd7ad08006a' },
-  { id: 'usdt_erc20', name: 'Tether (USDT ERC20)', type: 'crypto', icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 md:w-6 md:h-6"><path d="M12 0a12 12 0 1 0 0 24 12 12 0 0 0 0-24zm0 18.2c-4 0-7.2-1.2-7.2-2.7 0-1.1 1.7-2.1 4.2-2.5v-2.3H6.7V9.2h2.3V7.6c0-1.8 1.2-2.6 3-2.6 1.3 0 2.2 0.3 2.2 0.3l-0.3 1.6s-0.7-0.2-1.4-0.2c-0.8 0-1.1 0.4-1.1 1v1.5h2.8v1.5h-2.8v2.3c2.5 0.4 4.2 1.4 4.2 2.5 0 1.5-3.2 2.7-7.2 2.7z"/></svg>, color: 'text-[#26A17B]', bg: 'bg-[#26A17B]/10', time: '15 mins', limit: '50 - 200k', address: '0x836877b56054434f5be5c97c19809fd7ad08006a' },
-  { id: 'usdc_erc20', name: 'USD Coin (USDC ERC20)', type: 'crypto', icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 md:w-6 md:h-6"><path d="M12 0a12 12 0 1 0 0 24 12 12 0 0 0 0-24zm2.8 14.8c-0.9 0.7-2 1.1-3.2 1.1-3.1 0-5.6-2.5-5.6-5.6s2.5-5.6 5.6-5.6c1.3 0 2.5 0.4 3.4 1.2l-1.6 1.6c-0.5-0.4-1.1-0.7-1.8-0.7-1.8 0-3.3 1.5-3.3 3.3s1.5 3.3 3.3 3.3c0.8 0 1.5-0.3 2-0.8l1.2 1.8z"/></svg>, color: 'text-[#2775CA]', bg: 'bg-[#2775CA]/10', time: '15 mins', limit: '50 - 200k', address: '0x836877b56054434f5be5c97c19809fd7ad08006a' },
-  { id: 'usdt_bep20', name: 'Tether (USDT BEP20)', type: 'crypto', icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 md:w-6 md:h-6"><path d="M12 0a12 12 0 1 0 0 24 12 12 0 0 0 0-24zm0 18.2c-4 0-7.2-1.2-7.2-2.7 0-1.1 1.7-2.1 4.2-2.5v-2.3H6.7V9.2h2.3V7.6c0-1.8 1.2-2.6 3-2.6 1.3 0 2.2 0.3 2.2 0.3l-0.3 1.6s-0.7-0.2-1.4-0.2c-0.8 0-1.1 0.4-1.1 1v1.5h2.8v1.5h-2.8v2.3c2.5 0.4 4.2 1.4 4.2 2.5 0 1.5-3.2 2.7-7.2 2.7z"/></svg>, color: 'text-[#26A17B]', bg: 'bg-[#26A17B]/10', time: '5 mins', limit: '50 - 200k', address: '0x836877b56054434f5be5c97c19809fd7ad08006a' },
-  { id: 'usdc_bep20', name: 'USD Coin (USDC BEP20)', type: 'crypto', icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 md:w-6 md:h-6"><path d="M12 0a12 12 0 1 0 0 24 12 12 0 0 0 0-24zm2.8 14.8c-0.9 0.7-2 1.1-3.2 1.1-3.1 0-5.6-2.5-5.6-5.6s2.5-5.6 5.6-5.6c1.3 0 2.5 0.4 3.4 1.2l-1.6 1.6c-0.5-0.4-1.1-0.7-1.8-0.7-1.8 0-3.3 1.5-3.3 3.3s1.5 3.3 3.3 3.3c0.8 0 1.5-0.3 2-0.8l1.2 1.8z"/></svg>, color: 'text-[#2775CA]', bg: 'bg-[#2775CA]/10', time: '5 mins', limit: '50 - 200k', address: '0x836877b56054434f5be5c97c19809fd7ad08006a' },
-  { id: 'card', name: 'MasterCard / Visa', type: 'fiat', icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 md:w-6 md:h-6"><path d="M2.25 6A2.25 2.25 0 0 0 0 8.25v7.5A2.25 2.25 0 0 0 2.25 18h19.5A2.25 2.25 0 0 0 24 15.75v-7.5A2.25 2.25 0 0 0 21.75 6H2.25ZM2.25 9h19.5v1.5H2.25V9Zm0 4.5h19.5v2.25H2.25v-2.25Z"/></svg>, color: 'text-white', bg: 'bg-white/10', time: 'Instant', limit: '50 - 10k', status: 'soon' },
-  { id: 'paypal', name: 'PayPal', type: 'fiat', icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 md:w-6 md:h-6"><path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944 3.09a.636.636 0 0 1 .627-.533h7.247c3.96 0 5.626 1.815 5.253 4.542-.423 3.102-2.316 4.93-5.32 5.37l-.146.015c-.23.018-.466.024-.707.024H8.78a.494.494 0 0 0-.488.406l-1.216 8.423z"/></svg>, color: 'text-[#00457C]', bg: 'bg-[#00457C]/10', time: 'Instant', limit: '50 - 5k', status: 'soon' },
-  { id: 'bank', name: 'International Bank Wire', type: 'fiat', icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 md:w-6 md:h-6"><path d="M2 21h20v2H2v-2zm2-2V9H2v10h2zm16 0V9h-2v10h2zm-12 0V9H6v10h2zm4 0V9h-2v10h2zm4 0V9h-2v10h2zM12 2L2 7h20L12 2z"/></svg>, color: 'text-gray-300', bg: 'bg-white/5', time: '3-5 Days', limit: '500 - 500k', status: 'soon' },
+  { id: 'btc', name: 'Bitcoin (BTC)', type: 'crypto', iconSrc: '/crypto-btc.svg', color: 'text-[#F7931A]', bg: 'bg-[#F7931A]/10', time: 'Instant', limit: '50 - 200k', address: 'bc1qshcgsytuknsa6snremp80azdn6vjrudtsv6pg2' },
+  { id: 'usdt_trc20', name: 'Tether (USDT TRC20)', type: 'crypto', iconSrc: '/crypto-usdt.svg', color: 'text-[#26A17B]', bg: 'bg-[#26A17B]/10', time: '5 mins', limit: '50 - 200k', address: 'TJmjDXa7q4tNTZMij8hPXvghj1LrRkFf8V' },
+  { id: 'trx', name: 'TRON (TRX)', type: 'crypto', iconSrc: '/crypto-trx.svg', color: 'text-[#FF060A]', bg: 'bg-[#FF060A]/10', time: '5 mins', limit: '50 - 200k', address: 'TJmjDXa7q4tNTZMij8hPXvghj1LrRkFf8V' },
+  { id: 'eth', name: 'Ethereum (ETH)', type: 'crypto', iconSrc: '/crypto-eth.svg', color: 'text-[#627EEA]', bg: 'bg-[#627EEA]/10', time: '15 mins', limit: '50 - 200k', address: '0x836877b56054434f5be5c97c19809fd7ad08006a' },
+  { id: 'usdt_erc20', name: 'Tether (USDT ERC20)', type: 'crypto', iconSrc: '/crypto-usdt.svg', color: 'text-[#26A17B]', bg: 'bg-[#26A17B]/10', time: '15 mins', limit: '50 - 200k', address: '0x836877b56054434f5be5c97c19809fd7ad08006a' },
+  { id: 'usdc_erc20', name: 'USD Coin (USDC ERC20)', type: 'crypto', iconSrc: '/crypto-usdc.svg', color: 'text-[#2775CA]', bg: 'bg-[#2775CA]/10', time: '15 mins', limit: '50 - 200k', address: '0x836877b56054434f5be5c97c19809fd7ad08006a' },
+  { id: 'usdt_bep20', name: 'Tether (USDT BEP20)', type: 'crypto', iconSrc: '/crypto-usdt.svg', color: 'text-[#26A17B]', bg: 'bg-[#26A17B]/10', time: '5 mins', limit: '50 - 200k', address: '0x836877b56054434f5be5c97c19809fd7ad08006a' },
+  { id: 'usdc_bep20', name: 'USD Coin (USDC BEP20)', type: 'crypto', iconSrc: '/crypto-usdc.svg', color: 'text-[#2775CA]', bg: 'bg-[#2775CA]/10', time: '5 mins', limit: '50 - 200k', address: '0x836877b56054434f5be5c97c19809fd7ad08006a' },
+  { id: 'card', name: 'MasterCard / Visa', type: 'fiat', iconSrc: '/fiat-card.svg', color: 'text-white', bg: 'bg-white/10', time: 'Instant', limit: '50 - 10k', status: 'soon' },
+  { id: 'paypal', name: 'PayPal', type: 'fiat', iconSrc: '/fiat-paypal.svg', color: 'text-[#00457C]', bg: 'bg-[#00457C]/10', time: 'Instant', limit: '50 - 5k', status: 'soon' },
+  { id: 'bank', name: 'International Bank Wire', type: 'fiat', iconSrc: '/fiat-bank.svg', color: 'text-gray-300', bg: 'bg-white/5', time: '3-5 Days', limit: '500 - 500k', status: 'soon' },
 ];
 
 const FAQS = [
@@ -625,7 +613,6 @@ export default function Dashboard() {
       setKycProcessing(true);
       stopCamera();
       
-      // Simulate Processing (Made longer to look real)
       setTimeout(() => {
           setKycProcessing(false);
           setKycStatus('pending'); 
@@ -634,18 +621,16 @@ export default function Dashboard() {
           
           triggerToast("Documents submitted successfully!", "success");
           
-          // Simulate verification complete (Made longer 8s)
           setTimeout(() => {
               setKycStatus('verified'); 
               if(user) localStorage.setItem(`kycStatus_${user.id}`, 'verified'); // UPDATE PER USER
               triggerToast("Account Verified!", "success");
           }, 8000);
-      }, 5000); // 5s Processing Time
+      }, 5000); 
   };
 
-  // Face Check Sequence Trigger for Step 3 - Slow and Realistic
   useEffect(() => {
-      let isCancelled = false; // cleanup flag
+      let isCancelled = false;
 
       if (kycStep === 3 && activePage === 'kyc' && videoStream) {
           const runSequence = async () => {
@@ -680,12 +665,10 @@ export default function Dashboard() {
       // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kycStep, activePage, videoStream]);
 
-  // Cleanup camera on unmount or step change
   useEffect(() => {
       return () => stopCamera();
   }, []);
 
-  // --- NEW LOADING SCREEN ---
   if (loading) {
     return (
       <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center">
@@ -705,16 +688,13 @@ export default function Dashboard() {
     );
   }
 
-  // Calculate max date for 18 years old
   const maxDate = new Date();
   maxDate.setFullYear(maxDate.getFullYear() - 18);
   const maxDateString = maxDate.toISOString().split('T')[0];
 
   return (
-    // STRICT DARK MODE ENABLED & PROPORTIONAL LAYOUT FIX: Used h-screen and w-full
     <div className="h-screen w-full bg-[#050505] text-white font-sans flex overflow-hidden">
       
-      {/* Custom styles for cool calendar icon */}
       <style dangerouslySetInnerHTML={{__html: `
         input[type="date"]::-webkit-calendar-picker-indicator {
             filter: invert(1) sepia(100%) saturate(10000%) hue-rotate(210deg);
@@ -768,7 +748,7 @@ export default function Dashboard() {
           </div>
       </div>
 
-      {/* 2. SIDEBAR MENU - Added flex-shrink-0 and h-full for proportional alignment */}
+      {/* 2. SIDEBAR MENU */}
       <div className={`fixed top-0 left-0 h-full w-[280px] flex-shrink-0 bg-[#0A0A0A] border-r border-white/5 shadow-2xl z-[70] transform transition-transform duration-300 ease-out flex flex-col md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="h-16 flex items-center justify-between px-6 border-b border-white/5 flex-shrink-0">
            <span className="text-xl font-bold tracking-tighter cursor-pointer select-none uppercase text-white" onClick={() => router.push('/')}>gav<span className="text-blue-500">blue</span></span>
@@ -904,12 +884,13 @@ export default function Dashboard() {
                         )}
                     </div>
 
-                    {/* NEW: PAYMENT/CRYPTO METHOD SELECTOR */}
+                    {/* PAYMENT/CRYPTO METHOD SELECTOR */}
                     <div className="relative">
-                        <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-2 block">Deposit Method (Crypto)</label>
+                        <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-2 block">Deposit Method</label>
                         <button onClick={() => setIsPaymentDropdownOpen(!isPaymentDropdownOpen)} className="w-full bg-[#1A1A1A] text-white px-4 py-3.5 rounded-xl border border-white/10 flex items-center justify-between hover:bg-[#222] transition group">
                             <div className="flex items-center gap-3">
-                                <span className={`w-6 h-6 rounded flex items-center justify-center font-bold text-xs ${selectedDepositMethod.bg} ${selectedDepositMethod.color}`}>{selectedDepositMethod.icon}</span>
+                                {/* Use img tag for SVGs */}
+                                <div className={`w-6 h-6 rounded flex items-center justify-center p-1 ${selectedDepositMethod.bg}`}><img src={selectedDepositMethod.iconSrc} alt={selectedDepositMethod.name} className="w-full h-full object-contain" /></div>
                                 <span className="font-bold text-sm">{selectedDepositMethod.name}</span>
                             </div>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${isPaymentDropdownOpen ? 'rotate-180' : ''}`}><path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
@@ -919,7 +900,7 @@ export default function Dashboard() {
                                 {PAYMENT_METHODS.filter(m => m.type === 'crypto').map(m => (
                                     <div key={m.id} onClick={() => { setSelectedDepositMethod(m); setIsPaymentDropdownOpen(false); }} className={`px-4 py-3 cursor-pointer transition flex items-center justify-between ${selectedDepositMethod?.id === m.id ? 'bg-blue-600/10 border-l-2 border-blue-500' : 'hover:bg-white/5 border-l-2 border-transparent'}`}>
                                          <div className="flex items-center gap-3">
-                                             <span className={`w-6 h-6 rounded flex items-center justify-center font-bold text-xs ${m.bg} ${m.color}`}>{m.icon}</span>
+                                             <div className={`w-6 h-6 rounded flex items-center justify-center p-1 ${m.bg}`}><img src={m.iconSrc} alt={m.name} className="w-full h-full object-contain" /></div>
                                              <span className={`text-sm font-bold ${selectedDepositMethod?.id === m.id ? 'text-blue-400' : 'text-white'}`}>{m.name}</span>
                                          </div>
                                          {selectedDepositMethod?.id === m.id && <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 text-blue-500"><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>}
@@ -948,18 +929,16 @@ export default function Dashboard() {
       )}
 
       {/* =======================
-          MAIN CONTENT AREA - Added h-full and min-w-0 for precise screen fitting 
+          MAIN CONTENT AREA 
          ======================= */}
       <main className="flex-1 flex flex-col relative h-full overflow-hidden min-w-0 bg-[#050505]">
         
         {/* HEADER */}
         <header className="h-16 border-b border-white/5 bg-[#0A0A0A] w-full flex items-center justify-between px-4 md:px-6 z-30 flex-shrink-0">
-            {/* MENU BUTTON */}
             <div className="flex items-center gap-3 md:gap-4">
                 <button onClick={() => setIsSidebarOpen(true)} className="md:hidden text-gray-400 hover:text-white transition">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
                 </button>
-                {/* DYNAMIC TITLE */}
                 <h1 className="text-base md:text-lg font-bold capitalize text-white truncate">
                     {activePage === 'history' ? 'Trade History' : activePage === 'trans' ? 'Transactions' : activePage === 'kyc' ? 'Verification' : activePage.replace('-', ' ')}
                 </h1>
@@ -1035,7 +1014,6 @@ export default function Dashboard() {
                         <p className="text-gray-400 text-xs md:text-sm">Complete KYC to unlock full trading limits and withdrawals.</p>
                     </div>
 
-                    {/* ONLY show steps if they are unverified. If verified/pending, lock it here. */}
                     {kycStatus === 'verified' || kycStatus === 'pending' ? (
                         <div className="bg-[#111] border border-white/10 rounded-2xl p-8 text-center shadow-2xl">
                             <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-6 ${kycStatus === 'verified' ? 'bg-green-500/10 text-green-500' : 'bg-yellow-500/10 text-yellow-500'}`}>
@@ -1056,7 +1034,6 @@ export default function Dashboard() {
                                         <span className={`text-[10px] md:text-xs font-bold mt-1 md:mt-0 ${kycStep >= step ? 'text-blue-500' : 'text-gray-600'}`}>{step === 1 ? 'Personal Info' : step === 2 ? 'ID Upload' : 'Face Check'}</span>
                                     </div>
                                 ))}
-                                {/* Connecting Line */}
                                 <div className="absolute top-[165px] left-0 right-0 h-0.5 bg-white/5 -z-0 max-w-2xl mx-auto hidden md:block"></div>
                                 <div className="absolute top-[165px] left-0 h-0.5 bg-blue-600/50 -z-0 max-w-2xl mx-auto transition-all duration-500 hidden md:block" style={{ width: `${((kycStep - 1) / 2) * 100}%` }}></div>
                             </div>
@@ -1089,7 +1066,6 @@ export default function Dashboard() {
                                         </div>
                                         <div>
                                             <label className="block text-[10px] md:text-xs text-gray-500 font-bold uppercase mb-2">Date of Birth</label>
-                                            {/* Applied strict minimum and maximum dates here */}
                                             <input type="date" value={kycDob} min="1920-01-01" max={maxDateString} onChange={(e) => setKycDob(e.target.value)} className="w-full bg-[#050505] border border-white/10 rounded-xl px-4 py-3.5 text-white text-sm focus:border-blue-500 outline-none transition [color-scheme:dark]" />
                                             <p className="text-[10px] text-gray-500 mt-1 text-right">Must be at least 18 years old.</p>
                                         </div>
@@ -1105,7 +1081,6 @@ export default function Dashboard() {
                                 {kycStep === 2 && (
                                     <div className="space-y-6">
                                         <p className="text-xs md:text-sm text-gray-400 mb-4 text-center md:text-left">Please upload a clear photo of your Government ID (Passport, Driver's License, or ID Card).</p>
-                                        {/* Hidden Inputs */}
                                         <input type="file" ref={frontFileRef} onChange={(e) => handleFileSelect(e, 'front')} className="hidden" accept="image/*" />
                                         <input type="file" ref={backFileRef} onChange={(e) => handleFileSelect(e, 'back')} className="hidden" accept="image/*" />
 
@@ -1141,12 +1116,10 @@ export default function Dashboard() {
                                     </div>
                                 )}
 
-                                {/* Step 3: Face Check (Circular Scan Effect) */}
+                                {/* Step 3: Face Check */}
                                 {kycStep === 3 && (
                                     <div className="flex flex-col items-center justify-center py-4">
                                         <h3 className="text-lg md:text-xl text-white font-bold mb-6 text-center animate-pulse">{livenessInstruction}</h3>
-                                        
-                                        {/* Circular Camera Frame with Scanning effect */}
                                         <div className="relative w-56 h-56 md:w-64 md:h-64 rounded-full overflow-hidden border-4 border-blue-500 shadow-[0_0_30px_rgba(59,130,246,0.5)] mb-6 bg-black flex items-center justify-center group">
                                             {videoStream ? (
                                                 <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover transform scale-x-[-1]" />
@@ -1156,7 +1129,6 @@ export default function Dashboard() {
                                                     <p className="text-gray-500 text-[10px] md:text-xs">Camera is off</p>
                                                 </div>
                                             )}
-                                            {/* Inner frame mask to make it look even more like a circular scanner */}
                                             <div className="absolute inset-0 border-[15px] border-black/40 rounded-full pointer-events-none"></div>
                                             {videoStream && <div className="absolute inset-0 border-t-4 border-white/50 rounded-full animate-spin pointer-events-none"></div>}
                                             {videoStream && <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-500/20 to-transparent opacity-50 animate-pulse pointer-events-none"></div>}
@@ -1291,7 +1263,9 @@ export default function Dashboard() {
                                        onClick={() => method.status !== 'soon' && setSelectedDepositMethod(method)}
                                        className={`bg-[#111] border border-white/5 p-4 md:p-6 rounded-2xl transition group flex items-start gap-4 ${method.status === 'soon' ? 'opacity-50 cursor-not-allowed' : 'hover:border-blue-500/50 hover:bg-[#1A1A1A] cursor-pointer'}`}
                                    >
-                                       <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-lg md:text-xl font-bold ${method.bg} ${method.color} flex-shrink-0`}>{method.icon}</div>
+                                       <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center p-2.5 ${method.bg} flex-shrink-0`}>
+                                           <img src={method.iconSrc} alt={method.name} className="w-full h-full object-contain" />
+                                       </div>
                                        <div className="flex-1">
                                             <div className="flex justify-between items-center mb-1">
                                                  <h4 className="text-xs md:text-sm font-bold text-white group-hover:text-blue-400 transition">{method.name}</h4>
@@ -1309,7 +1283,6 @@ export default function Dashboard() {
                     ) : (
                         // DETAIL VIEW
                         <div className="max-w-6xl mx-auto">
-                            {/* TOP BAR */}
                             <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
                                 <button onClick={() => setSelectedDepositMethod(null)} className="text-blue-500 hover:text-white flex items-center gap-1 text-xs md:text-sm font-bold transition">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-3 h-3"><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" /></svg> 
@@ -1319,14 +1292,14 @@ export default function Dashboard() {
                             </div>
 
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-                                {/* LEFT: MAIN DEPOSIT AREA */}
                                 <div className="lg:col-span-2 space-y-6 md:space-y-8">
-                                    
                                     <div className="relative">
                                         <p className="text-[10px] md:text-xs text-gray-500 font-bold uppercase mb-2">Payment method</p>
                                         <button onClick={() => setIsPaymentDropdownOpen(!isPaymentDropdownOpen)} className="w-full bg-[#1A1A1A] text-white px-4 py-3.5 rounded-xl border border-white/10 flex items-center justify-between hover:bg-[#222] transition group">
                                             <div className="flex items-center gap-3">
-                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${selectedDepositMethod.bg} ${selectedDepositMethod.color}`}>{selectedDepositMethod.icon}</div>
+                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center p-1.5 ${selectedDepositMethod.bg}`}>
+                                                    <img src={selectedDepositMethod.iconSrc} alt={selectedDepositMethod.name} className="w-full h-full object-contain" />
+                                                </div>
                                                 <span className="text-white font-bold text-sm">{selectedDepositMethod.name}</span>
                                             </div>
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isPaymentDropdownOpen ? 'rotate-180' : ''}`}><path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
@@ -1336,7 +1309,9 @@ export default function Dashboard() {
                                                 {PAYMENT_METHODS.filter(m => m.type === 'crypto').map(m => (
                                                     <div key={m.id} onClick={() => { setSelectedDepositMethod(m); setIsPaymentDropdownOpen(false); }} className={`px-4 py-3 cursor-pointer transition flex items-center justify-between ${selectedDepositMethod?.id === m.id ? 'bg-blue-600/10 border-l-2 border-blue-500' : 'hover:bg-white/5 border-l-2 border-transparent'}`}>
                                                          <div className="flex items-center gap-3">
-                                                             <span className={`w-6 h-6 rounded flex items-center justify-center font-bold text-xs ${m.bg} ${m.color}`}>{m.icon}</span>
+                                                             <div className={`w-8 h-8 rounded-full flex items-center justify-center p-1.5 ${m.bg}`}>
+                                                                 <img src={m.iconSrc} alt={m.name} className="w-full h-full object-contain" />
+                                                             </div>
                                                              <span className={`text-sm font-bold ${selectedDepositMethod?.id === m.id ? 'text-blue-400' : 'text-white'}`}>{m.name}</span>
                                                          </div>
                                                          {selectedDepositMethod?.id === m.id && <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 text-blue-500"><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>}
@@ -1370,7 +1345,6 @@ export default function Dashboard() {
                                             </button>
                                         </div>
 
-                                        {/* QR CODE */}
                                         <div className="w-40 h-40 md:w-48 md:h-48 bg-white p-2 md:p-3 rounded-xl border border-gray-200 mx-auto sm:mx-0">
                                              <img 
                                                 src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${selectedDepositMethod.address}`} 
@@ -1385,7 +1359,6 @@ export default function Dashboard() {
                                     </div>
                                 </div>
 
-                                {/* RIGHT: SIDEBAR INFO */}
                                 <div className="lg:col-span-1 space-y-6 md:space-y-8 mt-6 lg:mt-0">
                                     <div className="bg-[#111] border border-white/5 rounded-2xl p-5 md:p-6">
                                         <h3 className="font-bold text-white text-base md:text-lg mb-4">Terms</h3>
@@ -1429,7 +1402,6 @@ export default function Dashboard() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                         {/* LEFT: FORM */}
                         <div className="space-y-5 md:space-y-6">
-                             {/* Crypto Selector */}
                             <div className="relative">
                                 <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-2 block">Withdrawal Method</label>
                                 <button 
@@ -1439,7 +1411,9 @@ export default function Dashboard() {
                                     <div className="flex items-center gap-3">
                                          {selectedWithdrawMethod ? (
                                               <>
-                                                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${selectedWithdrawMethod.bg} ${selectedWithdrawMethod.color}`}>{selectedWithdrawMethod.icon}</div>
+                                                  <div className={`w-8 h-8 rounded-full flex items-center justify-center p-1.5 ${selectedWithdrawMethod.bg}`}>
+                                                      <img src={selectedWithdrawMethod.iconSrc} alt={selectedWithdrawMethod.name} className="w-full h-full object-contain" />
+                                                  </div>
                                                   <span className="font-bold text-sm">{selectedWithdrawMethod.name}</span>
                                              </>
                                          ) : <span className="text-gray-500 text-sm">Select Method</span>}
@@ -1459,7 +1433,9 @@ export default function Dashboard() {
                                                     }}
                                                     className={`px-4 py-3 transition flex items-center gap-3 ${m.status === 'soon' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-white/5'} ${selectedWithdrawMethod?.id === m.id ? 'bg-blue-600/10 border-l-2 border-blue-500' : 'border-l-2 border-transparent'}`}
                                                 >
-                                                     <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${m.bg} ${m.color}`}>{m.icon}</div>
+                                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center p-1.5 ${m.bg}`}>
+                                                         <img src={m.iconSrc} alt={m.name} className="w-full h-full object-contain" />
+                                                     </div>
                                                     <span className={`text-sm font-bold ${selectedWithdrawMethod?.id === m.id ? 'text-blue-400' : 'text-white'}`}>{m.name}</span>
                                                     {m.status === 'soon' && <span className="ml-auto text-[8px] md:text-[9px] bg-white/10 px-1.5 md:px-2 py-0.5 rounded text-gray-400">SOON</span>}
                                                 </div>
@@ -1622,7 +1598,6 @@ export default function Dashboard() {
                         </div>
                     </div>
 
-                    {/* MAIN CHART (FLAT LINE 0) */}
                     <div className="bg-[#111] border border-white/10 rounded-2xl p-4 md:p-6 h-[250px] md:h-[300px] relative overflow-hidden group">
                         <div className="absolute top-4 md:top-6 left-4 md:left-6 z-10">
                             <p className="text-[10px] md:text-xs text-gray-500 font-bold uppercase tracking-wider">Total Net Profit</p>
@@ -1641,7 +1616,6 @@ export default function Dashboard() {
                         </div>
                     </div>
 
-                    {/* DETAILED STATS GRID (ALL 0) */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
                         {[
                             { label: 'Total Trades', val: '0' },
@@ -1665,14 +1639,11 @@ export default function Dashboard() {
         </div>
       </main>
       
-      {/* ADDED AI SUPPORT COMPONENT HERE */}
+      {/* Draggable Support Button */}
       <AiSupportChat />
-
     </div>
   );
 }
-
-// --- HELPER COMPONENTS ---
 
 function SidebarItem({ icon, label, active, onClick, isExternal }: { icon: string, label: string, active: boolean, onClick: () => void, isExternal?: boolean }) {
     return (
